@@ -220,7 +220,7 @@ def get_claims_by_bill(bill_id):
 
 def get_claimed_amount(bill_id):
     claims = get_claims_by_bill(bill_id)
-    return sum(c.get('amount', 0) for c in claims if c.get('status') == 'pending')
+    return sum(c.get('amount', 0) for c in claims)
 
 def get_user_claimed_amount(user_id):
     claims = read_json(CLAIMS_FILE)
@@ -683,6 +683,48 @@ def confirm_receiver(claim_id):
         return jsonify({'code': 5000, 'message': f'确认收款失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
 # ================================================================
+# 9.5 取消认领接口
+# ================================================================
+@app.route('/api/claims/<int:claim_id>', methods=['DELETE'])
+def cancel_claim(claim_id):
+    try:
+        claims = read_json(CLAIMS_FILE)
+        claim = next((c for c in claims if c.get('id') == claim_id), None)
+        if not claim:
+            return jsonify({'code': 404, 'message': f'认领记录不存在 (ID: {claim_id})'})
+        
+        # 已确认转账的不能取消
+        if claim.get('payer_confirmed'):
+            return jsonify({'code': 1004, 'message': '该认领已确认转账，无法取消'})
+        if claim.get('receiver_confirmed'):
+            return jsonify({'code': 1004, 'message': '该认领已确认收款，无法取消'})
+        
+        bill_id = claim.get('bill_id')
+        
+        # 删除该认领
+        claims = [c for c in claims if c.get('id') != claim_id]
+        write_json(CLAIMS_FILE, claims)
+        
+        # 重新计算账单状态
+        bills = read_json(BILLS_FILE)
+        bill = next((b for b in bills if b.get('id') == bill_id), None)
+        if bill:
+            remaining_claims = [c for c in claims if c.get('bill_id') == bill_id]
+            if len(remaining_claims) == 0:
+                bill['status'] = 'pending'
+            else:
+                total_claimed = sum(c.get('amount', 0) for c in remaining_claims if c.get('status') == 'pending')
+                bill['status'] = 'transferring' if total_claimed >= bill.get('total_amount', 0) else 'claiming'
+            write_json(BILLS_FILE, bills)
+        
+        return jsonify({'code': 0, 'message': '认领已取消'})
+    except Exception as e:
+        print(f'❌ [取消认领接口异常] claim_id={claim_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'取消认领失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
+
+# ================================================================
 # 10. 结算接口
 # ================================================================
 @app.route('/api/settlement/<int:user_id>', methods=['GET'])
@@ -738,6 +780,15 @@ def get_settlement(user_id):
         return jsonify({'code': 5000, 'message': f'获取结算数据异常: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
 # ================================================================
+SETTINGS_FILE = os.path.join(BASE_DIR, 'settings.json')
+
+def get_ranking_cleared_at():
+    try:
+        settings = read_json(SETTINGS_FILE)
+        return settings.get('ranking_cleared_at')
+    except:
+        return None
+
 # 11. 激励榜
 # ================================================================
 @app.route('/api/ranking', methods=['GET'])
@@ -745,18 +796,19 @@ def get_ranking():
     try:
         users = read_json(USERS_FILE)
         bills = read_json(BILLS_FILE)
+        cleared_at = get_ranking_cleared_at()
         
         medals = []
         for u in users:
             claims = read_json(CLAIMS_FILE)
-            count = len([c for c in claims if c.get('claimant_id') == u.get('id') and c.get('status') == 'settled'])
+            count = len([c for c in claims if c.get('claimant_id') == u.get('id') and c.get('status') == 'settled' and (cleared_at is None or c.get('settled_at', '') > cleared_at)])
             medals.append({'user_id': u.get('id'), 'name': u.get('name'), 'count': count})
         
         medals.sort(key=lambda x: x['count'], reverse=True)
         
         shoppers = []
         for u in users:
-            count = len([b for b in bills if b.get('purchaser_id') == u.get('id')])
+            count = len([b for b in bills if b.get('purchaser_id') == u.get('id') and (cleared_at is None or b.get('created_at', '') > cleared_at)])
             shoppers.append({'user_id': u.get('id'), 'name': u.get('name'), 'count': count})
         
         shoppers.sort(key=lambda x: x['count'], reverse=True)
@@ -1011,6 +1063,22 @@ def admin_reset_all():
         import traceback
         traceback.print_exc()
         return jsonify({'code': 5000, 'message': f'重置失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
+
+@app.route('/api/admin/clear-ranking', methods=['POST'])
+def admin_clear_ranking():
+    try:
+        from datetime import datetime
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        settings = read_json(SETTINGS_FILE) if os.path.exists(SETTINGS_FILE) else {}
+        settings['ranking_cleared_at'] = now
+        write_json(SETTINGS_FILE, settings)
+        print(f'🗑️ [管理员] 已清除排行数据 ({now})')
+        return jsonify({'code': 0, 'message': '已清除排行数据，排行统计已归零'})
+    except Exception as e:
+        print(f'❌ [清除排行异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'清除排行失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
 # ================================================================
 # 14. 提供前端页面
