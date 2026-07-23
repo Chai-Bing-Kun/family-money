@@ -269,6 +269,56 @@
             color: #2e7d32;
         }
 
+        /* ========== 状态筛选标签 ========== */
+        .filter-tabs {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .filter-tab {
+            padding: 5px 14px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            color: #666;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .filter-tab:hover {
+            background: #f5f5f5;
+            border-color: #bbb;
+        }
+        .filter-tab.active {
+            background: #4a6cf7;
+            color: #fff;
+            border-color: #4a6cf7;
+        }
+
+        /* ========== 认领人列表 ========== */
+        .claimant-list {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e8ecf1;
+            font-size: 13px;
+        }
+        .claimant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            color: #555;
+        }
+        .claimant-item .amount-tag {
+            font-weight: 600;
+        }
+        .claimant-payer-confirmed {
+            color: #2ecc71;
+            font-size: 11px;
+        }
+
         /* ========== 统计卡片 ========== */
         .stats-grid {
             display: grid;
@@ -750,9 +800,6 @@
                 <input type="password" id="loginPassword" placeholder="请输入密码" onkeydown="if(event.key==='Enter') handleLogin()" />
             </div>
             <button class="btn-login" onclick="handleLogin()">登 录</button>
-            <div class="demo-hint">
-                演示账号：<code>aaa</code> / <code>123456</code> ｜ <code>son</code> / <code>123456</code> ｜ <code>daughter</code> / <code>123456</code>
-            </div>
         </div>
     </div>
 
@@ -814,14 +861,23 @@
             <div class="card" style="background:#fff;border:2px solid #4a6cf7;">
                 <div class="card-header">
                     <span class="card-title">🧑 我的速览</span>
-                    <span class="card-badge badge-settled" id="myIdBadge">用户 ID: -</span>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px;">
                     <div><strong>承诺总额</strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
                     <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
                     <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
                     <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
                     <div><strong>应付款</strong><br /><span id="myPayable" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
+                </div>
+                <!-- 应付款明细列表 -->
+                <div id="payableDetailList" style="border-top:1px solid #eee;padding-top:10px;">
+                    <div style="font-size:13px;font-weight:600;color:#e74c3c;margin-bottom:6px;">📋 应付款明细（转给谁）</div>
+                    <div id="payableDetailItems" style="font-size:13px;color:#555;"></div>
+                </div>
+                <!-- 应收款明细列表 -->
+                <div id="receivableDetailList" style="border-top:1px solid #eee;padding-top:10px;margin-top:8px;">
+                    <div style="font-size:13px;font-weight:600;color:#2ecc71;margin-bottom:6px;">📋 应收款明细（谁付给我）</div>
+                    <div id="receivableDetailItems" style="font-size:13px;color:#555;"></div>
                 </div>
             </div>
         </div>
@@ -831,7 +887,7 @@
         <!-- ============================================================ -->
         <div class="page" id="page-bills">
             <h2 class="page-title">📋 账单管理</h2>
-            <p class="page-subtitle">创建新账单或认领已有账单</p>
+            <p class="page-subtitle">创建新账单，查看所有历史账单及收付款人</p>
 
             <div class="card" style="background:#fff;border:2px dashed #d0d5dd;">
                 <div class="card-header">
@@ -854,7 +910,14 @@
                 <button class="btn btn-primary" onclick="createBill()">📤 提交账单</button>
             </div>
 
-            <h3 style="margin:20px 0 10px;font-size:15px;">📄 待报销账单</h3>
+            <h3 style="margin:20px 0 8px;font-size:15px;">📄 全部账单记录</h3>
+            <div class="filter-tabs" id="billFilterBar">
+                <button class="filter-tab active" data-filter="all" onclick="filterBills('all')">📋 全部</button>
+                <button class="filter-tab" data-filter="pending" onclick="filterBills('pending')">⏳ 待认领</button>
+                <button class="filter-tab" data-filter="claiming" onclick="filterBills('claiming')">✋ 认领中</button>
+                <button class="filter-tab" data-filter="transferring" onclick="filterBills('transferring')">💸 待转账</button>
+                <button class="filter-tab" data-filter="settled" onclick="filterBills('settled')">✅ 已结清</button>
+            </div>
             <div id="billList"></div>
         </div>
 
@@ -898,8 +961,8 @@
         // 1. 配置
         // ================================================================
 
-        // 后端地址（对接真实后端时修改）
-        const API_BASE = 'http://localhost:3000/api';
+        // 后端地址（使用相对路径，自动适配 PC/手机等任何设备）
+        const API_BASE = '/api';
 
         // 是否使用 Mock 数据（true=演示模式，false=对接后端）
         const USE_MOCK = false;
@@ -1599,6 +1662,7 @@
                 // 保存登录状态
                 saveAuth(token, { user_id, username, name, role, is_admin, max_commitment });
                 currentUser = { id: user_id, name, role, is_admin };
+                updatePurchaserSelect();
 
                 console.log(`✅ [登录] 用户 ${name} (ID:${user_id}) 登录成功, 角色: ${getRoleDisplay(role)}`);
 
@@ -1609,7 +1673,6 @@
                 // 更新导航用户信息
                 document.getElementById('navbarUser').innerHTML =
                     `👤 ${name} <span class="role-badge">${getRoleDisplay(role)}</span>`;
-                document.getElementById('myIdBadge').textContent = `用户 ID: ${user_id}`;
 
                 showToast(`🎉 欢迎回来，${name}！`, 'success');
 
@@ -1645,11 +1708,11 @@
             const user = getStoredUser();
             if (token && user) {
                 currentUser = { id: user.user_id, name: user.name, role: user.role, is_admin: user.is_admin };
+                updatePurchaserSelect();
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
                 document.getElementById('navbarUser').innerHTML =
                     `👤 ${user.name} <span class="role-badge">${getRoleDisplay(user.role)}</span>`;
-                document.getElementById('myIdBadge').textContent = `用户 ID: ${user.user_id}`;
                 renderAll();
                 return true;
             }
@@ -1701,39 +1764,149 @@
                 document.getElementById('myReceivable').textContent = me.receivable.toFixed(0);
                 document.getElementById('myPayable').textContent = me.payable.toFixed(0);
 
+                // 渲染应付款明细（每一笔应付给谁）
+                const payableItems = document.getElementById('payableDetailItems');
+                const payableDetail = me.payable_detail || [];
+                if (payableDetail.length === 0) {
+                    payableItems.innerHTML = '<div style="color:#aaa;padding:4px 0;">✅ 暂无应付款项</div>';
+                } else {
+                    payableItems.innerHTML = payableDetail.map(item => `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:#fef2f2;margin-bottom:4px;">
+                            <span>转给 <strong>${item.receiver_name}</strong></span>
+                            <span>
+                                <span style="font-weight:600;color:#e74c3c;">${item.amount.toFixed(0)} 元</span>
+                                ${item.payer_confirmed
+                                    ? '<span style="margin-left:6px;font-size:11px;color:#2ecc71;">✅ 已确认</span>'
+                                    : `<button class="btn btn-success btn-sm" style="margin-left:8px;" onclick="confirmPayerFromDash(${item.claim_id})">我已转账</button>`
+                                }
+                            </span>
+                        </div>
+                    `).join('');
+                }
+
+                // 渲染应收款明细（每一笔谁付给我）
+                const receivableItems = document.getElementById('receivableDetailItems');
+                const receivableDetail = me.receivable_detail || [];
+                if (receivableDetail.length === 0) {
+                    receivableItems.innerHTML = '<div style="color:#aaa;padding:4px 0;">✅ 暂无应收款项</div>';
+                } else {
+                    receivableItems.innerHTML = receivableDetail.map(item => `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:6px;background:#f0fdf4;margin-bottom:4px;">
+                            <span><strong>${item.payer_name}</strong></span>
+                            <span>
+                                <span style="font-weight:600;color:#2ecc71;">${item.amount.toFixed(0)} 元</span>
+                                ${item.receiver_confirmed
+                                    ? '<span style="margin-left:6px;font-size:11px;color:#2ecc71;">✅ 已确认</span>'
+                                    : `<button class="btn btn-primary btn-sm" style="margin-left:8px;" onclick="confirmReceiverFromDash(${item.claim_id})">我已收到</button>`
+                                }
+                            </span>
+                        </div>
+                    `).join('');
+                }
+
             } catch (e) {
                 console.error(`❌ [仪表盘渲染] 加载仪表盘数据失败:`, e);
             }
         }
 
-        // 更新购买人下拉框
+        // 更新购买人下拉框（仅显示当前登录用户）
         function updatePurchaserSelect() {
             const sel = document.getElementById('billPurchaser');
-            sel.innerHTML = mockUsers.map(u =>
-                `<option value="${u.id}" ${u.id === currentUser?.id ? 'selected' : ''}>${u.name} (${getRoleDisplay(u.role)})</option>`
-            ).join('');
+            if (currentUser) {
+                sel.innerHTML = `<option value="${currentUser.id}" selected>${currentUser.name} (${getRoleDisplay(currentUser.role)})</option>`;
+            } else {
+                sel.innerHTML = '<option value="">请先登录</option>';
+            }
         }
+
+        // 当前账单筛选状态
+        let currentBillFilter = 'all';
 
         async function renderBills() {
             try {
-                const resp = await callAPI('/bills');
-                const billsData = resp.data;
+                const userId = currentUser?.id;
+                if (!userId) return;
+
+                // 始终获取全部账单，在前端做个性化筛选
+                const resp = await callAPI('/bills?status=all');
+                let billsData = resp.data;
                 const container = document.getElementById('billList');
 
+                // 前端个性化筛选
+                if (currentBillFilter === 'pending') {
+                    // 待认领：当前用户未认领的账单（含全局 pending + 别人认领了但自己没认的）
+                    billsData = billsData.filter(b => {
+                        if (b.status === 'settled') return false;
+                        if (b.status === 'transferring') return false;
+                        const myClaim = b.claimants?.find(c => c.claimant_id === userId);
+                        return !myClaim;
+                    });
+                } else if (currentBillFilter === 'claiming') {
+                    // 认领中：当前用户已认领但未结清的账单
+                    billsData = billsData.filter(b => {
+                        if (b.status === 'settled') return false;
+                        const myClaim = b.claimants?.find(c => c.claimant_id === userId);
+                        return !!myClaim;
+                    });
+                } else if (currentBillFilter === 'transferring') {
+                    billsData = billsData.filter(b => b.status === 'transferring');
+                } else if (currentBillFilter === 'settled') {
+                    billsData = billsData.filter(b => b.status === 'settled');
+                }
+
                 if (billsData.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><span class="emoji">📭</span>暂无账单，创建一个吧！</div>`;
+                    const emptyMsg = currentBillFilter === 'all' ? '暂无账单，创建一个吧！' : '该状态下暂无账单';
+                    container.innerHTML = `<div class="empty-state"><span class="emoji">📭</span>${emptyMsg}</div>`;
                     return;
                 }
 
                 container.innerHTML = billsData.map(b => {
-                    const statusText = getBillStatusText(b.status);
-                    const badgeClass = getBillStatusBadge(b.status);
+                    // 个性化状态徽章
+                    const myClaim = b.claimants?.find(c => c.claimant_id === userId);
+                    let displayStatus = b.status;
+                    let displayStatusText = getBillStatusText(b.status);
+                    if (b.status === 'claiming' && !myClaim) {
+                        // 别人认领了，但我还没认领 → 对我显示"待认领"
+                        displayStatus = 'pending';
+                        displayStatusText = '待认领';
+                    } else if (b.status === 'claiming' && myClaim) {
+                        // 我已认领 → 显示"认领中"
+                        displayStatus = 'claiming';
+                        displayStatusText = '认领中';
+                    }
+                    const badgeClass = getBillStatusBadge(displayStatus);
                     const isSettled = b.status === 'settled';
+                    const canClaim = b.status === 'pending' || (b.status === 'claiming' && !myClaim);
+
+                    // 认领人列表
+                    let claimantsHtml = '';
+                    if (b.claimants && b.claimants.length > 0) {
+                        claimantsHtml = `<div class="claimant-list">`;
+                        b.claimants.forEach(c => {
+                            const isMe = c.claimant_id === userId;
+                            const cStatus = c.payer_confirmed && c.receiver_confirmed ? '✅ 已结清' :
+                                c.payer_confirmed ? '💸 已转账' :
+                                c.receiver_confirmed ? '📥 已收款' : '⏳ 待确认';
+                            claimantsHtml += `
+                                <div class="claimant-item">
+                                    <span>${c.claimant_name}${isMe ? ' <span style="color:#4a6cf7;font-size:11px;">(我)</span>' : ''}</span>
+                                    <span>
+                                        <span class="amount-tag">${c.amount.toFixed(0)} 元</span>
+                                        <span style="margin-left:6px;font-size:11px;color:#888;">${cStatus}</span>
+                                    </span>
+                                </div>
+                            `;
+                        });
+                        claimantsHtml += `</div>`;
+                    } else {
+                        claimantsHtml = `<div class="claimant-list" style="color:#aaa;">暂无认领人</div>`;
+                    }
+
                     return `
                         <div class="card" style="${isSettled ? 'opacity:0.6;' : ''}">
                             <div class="card-header">
                                 <span class="card-title">${b.title}</span>
-                                <span class="card-badge ${badgeClass}">${statusText}</span>
+                                <span class="card-badge ${badgeClass}">${displayStatusText}</span>
                             </div>
                             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;">
                                 <div>
@@ -1747,10 +1920,13 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- 收付款人信息 -->
+                            <div style="margin-top:8px;font-size:13px;font-weight:600;color:#555;">👥 收付款人</div>
+                            ${claimantsHtml}
                             ${!isSettled ? `
                             <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
                                 <button class="btn btn-primary btn-sm" onclick="viewBillDetail(${b.id})">查看详情</button>
-                                <button class="btn btn-success btn-sm" onclick="showClaimModal(${b.id})">✋ 认领报销</button>
+                                ${canClaim ? `<button class="btn btn-success btn-sm" onclick="showClaimModal(${b.id})">✋ 认领报销</button>` : ''}
                             </div>
                             ` : `
                             <div style="margin-top:6px;font-size:13px;color:#2e7d32;">✅ 已于 ${b.settled_at || '未知时间'} 结清</div>
@@ -1762,6 +1938,16 @@
             } catch (e) {
                 console.error(`❌ [账单列表渲染] 加载账单数据失败:`, e);
             }
+        }
+
+        /** 按状态筛选账单（个性化筛选） */
+        function filterBills(status) {
+            currentBillFilter = status;
+            // 更新筛选按钮高亮
+            document.querySelectorAll('#billFilterBar .filter-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.filter === status);
+            });
+            renderBills();
         }
 
         async function viewBillDetail(billId) {
@@ -1805,9 +1991,10 @@
         }
 
         function showClaimModal(billId) {
-            const userOptions = mockUsers.map(u =>
-                `<option value="${u.id}" ${u.id === currentUser?.id ? 'selected' : ''}>${u.name} (${getRoleDisplay(u.role)})</option>`
-            ).join('');
+            // 认领人仅限当前登录用户
+            const userOptions = currentUser
+                ? `<option value="${currentUser.id}" selected>${currentUser.name} (${getRoleDisplay(currentUser.role)})</option>`
+                : '<option value="">请先登录</option>';
 
             openModal(
                 '✋ 认领报销',
@@ -1901,6 +2088,28 @@
             } catch (e) {
                 console.error(`❌ [结算渲染] 加载结算数据失败:`, e);
                 container.innerHTML = `<div class="empty-state"><span class="emoji">😵</span>结算数据加载失败</div>`;
+            }
+        }
+
+        /** 仪表盘专用 - 确认转账（付款方） */
+        async function confirmPayerFromDash(claimId) {
+            try {
+                await callAPI(`/claims/${claimId}/confirm-payer`, { method: 'PUT' });
+                showToast('✅ 已确认转账', 'success');
+                await renderDashboard();
+            } catch (e) {
+                console.error(`❌ [仪表盘确认转账] 认领 ${claimId} 确认转出失败:`, e);
+            }
+        }
+
+        /** 仪表盘专用 - 确认收款（收款方） */
+        async function confirmReceiverFromDash(claimId) {
+            try {
+                await callAPI(`/claims/${claimId}/confirm-receiver`, { method: 'PUT' });
+                showToast('✅ 已确认收款', 'success');
+                await renderDashboard();
+            } catch (e) {
+                console.error(`❌ [仪表盘确认收款] 认领 ${claimId} 确认收款失败:`, e);
             }
         }
 
@@ -2039,7 +2248,6 @@
 
         if (USE_MOCK) {
             console.log('📦 Mock 模式已启用（USE_MOCK = true）');
-            console.log('🔑 演示账号: aaa/123456, son/123456, daughter/123456');
         } else {
             console.log(`🔗 对接后端: ${API_BASE}`);
             // 启动时检测后端连接
@@ -2082,6 +2290,8 @@
         window.showClaimModal = showClaimModal;
         window.confirmPayer = confirmPayer;
         window.confirmReceiver = confirmReceiver;
+        window.confirmPayerFromDash = confirmPayerFromDash;
+        window.confirmReceiverFromDash = confirmReceiverFromDash;
         window.closeModal = closeModal;
         window.modalConfirm = modalConfirm;
         window.renderAll = renderAll;

@@ -347,6 +347,43 @@ def dashboard():
         
         if not current_user_data:
             current_user_data = members[0] if members else {}
+        
+        # 获取当前用户的应付/应收明细
+        claims_data = read_json(CLAIMS_FILE)
+        bills_data = read_json(BILLS_FILE)
+        payable_detail = []
+        receivable_detail = []
+        uid = current_user_data.get('id')
+        for c in claims_data:
+            if c.get('status') != 'pending':
+                continue
+            bill = next((b for b in bills_data if b.get('id') == c.get('bill_id')), None)
+            if not bill:
+                continue
+            # 当前用户是认领人 → 应付款（转给购买人）
+            if c.get('claimant_id') == uid:
+                payable_detail.append({
+                    'claim_id': c.get('id'),
+                    'bill_id': bill.get('id'),
+                    'bill_title': bill.get('title'),
+                    'receiver_name': get_user_name(bill.get('purchaser_id')),
+                    'amount': c.get('amount'),
+                    'payer_confirmed': c.get('payer_confirmed', False)
+                })
+            # 当前用户是购买人 → 应收款（认领人付给他）
+            if bill.get('purchaser_id') == uid:
+                receivable_detail.append({
+                    'claim_id': c.get('id'),
+                    'bill_id': bill.get('id'),
+                    'bill_title': bill.get('title'),
+                    'payer_name': get_user_name(c.get('claimant_id')),
+                    'amount': c.get('amount'),
+                    'receiver_confirmed': c.get('receiver_confirmed', False)
+                })
+        
+        current_user_data['payable_detail'] = payable_detail
+        current_user_data['receivable_detail'] = receivable_detail
+        
         return jsonify({
             'code': 0,
             'message': 'success',
@@ -382,6 +419,19 @@ def get_bills():
         result = []
         for b in bills:
             claimed = get_claimed_amount(b.get('id'))
+            # 获取该账单的认领人信息
+            claims = get_claims_by_bill(b.get('id'))
+            claimants = []
+            for c in claims:
+                claimants.append({
+                    'claimant_id': c.get('claimant_id'),
+                    'claimant_name': get_user_name(c.get('claimant_id')),
+                    'amount': c.get('amount'),
+                    'status': c.get('status'),
+                    'status_text': '已结清' if c.get('status') == 'settled' else '待确认',
+                    'payer_confirmed': c.get('payer_confirmed', False),
+                    'receiver_confirmed': c.get('receiver_confirmed', False)
+                })
             result.append({
                 'id': b.get('id'),
                 'title': b.get('title'),
@@ -392,7 +442,8 @@ def get_bills():
                 'claimed_amount': claimed,
                 'remaining': b.get('total_amount', 0) - claimed,
                 'created_at': b.get('created_at', ''),
-                'settled_at': b.get('settled_at')
+                'settled_at': b.get('settled_at'),
+                'claimants': claimants
             })
         return jsonify({'code': 0, 'message': 'success', 'data': result})
     except Exception as e:
@@ -578,9 +629,12 @@ def confirm_payer(claim_id):
             return jsonify({'code': 404, 'message': f'认领记录不存在 (ID: {claim_id})'})
         
         claim['payer_confirmed'] = True
+        # 先写盘，确保后续读取的是最新数据
+        write_json(CLAIMS_FILE, claims)
         if claim.get('receiver_confirmed'):
             claim['status'] = 'settled'
             claim['settled_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            write_json(CLAIMS_FILE, claims)
             bills = read_json(BILLS_FILE)
             bill = next((b for b in bills if b.get('id') == claim.get('bill_id')), None)
             if bill:
@@ -590,7 +644,6 @@ def confirm_payer(claim_id):
                     bill['settled_at'] = claim['settled_at']
                     write_json(BILLS_FILE, bills)
         
-        write_json(CLAIMS_FILE, claims)
         return jsonify({'code': 0, 'message': '已确认转账'})
     except Exception as e:
         print(f'❌ [付款方确认接口异常] claim_id={claim_id}, {e}')
@@ -607,9 +660,12 @@ def confirm_receiver(claim_id):
             return jsonify({'code': 404, 'message': f'认领记录不存在 (ID: {claim_id})'})
         
         claim['receiver_confirmed'] = True
+        # 先写盘，确保后续读取的是最新数据
+        write_json(CLAIMS_FILE, claims)
         if claim.get('payer_confirmed'):
             claim['status'] = 'settled'
             claim['settled_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            write_json(CLAIMS_FILE, claims)
             bills = read_json(BILLS_FILE)
             bill = next((b for b in bills if b.get('id') == claim.get('bill_id')), None)
             if bill:
@@ -619,7 +675,6 @@ def confirm_receiver(claim_id):
                     bill['settled_at'] = claim['settled_at']
                     write_json(BILLS_FILE, bills)
         
-        write_json(CLAIMS_FILE, claims)
         return jsonify({'code': 0, 'message': '已确认收款'})
     except Exception as e:
         print(f'❌ [收款方确认接口异常] claim_id={claim_id}, {e}')
@@ -943,6 +998,20 @@ def admin_delete_user(user_id):
         traceback.print_exc()
         return jsonify({'code': 5000, 'message': f'删除用户失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
+@app.route('/api/admin/reset', methods=['POST'])
+def admin_reset_all():
+    try:
+        # 清空所有账单和认领数据
+        write_json(BILLS_FILE, [])
+        write_json(CLAIMS_FILE, [])
+        print('🗑️ [管理员] 已清空全部账单和认领数据')
+        return jsonify({'code': 0, 'message': '已清空全部账单和认领数据'})
+    except Exception as e:
+        print(f'❌ [重置数据异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'重置失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
+
 # ================================================================
 # 14. 提供前端页面
 # ================================================================
@@ -988,7 +1057,7 @@ if __name__ == '__main__':
     print(f'📂 用户数据: {USERS_FILE}')
     print(f'📂 账单数据: {BILLS_FILE}')
     print(f'📂 认领数据: {CLAIMS_FILE}')
-    print(f'🔗 访问地址: http://localhost:3000')
+    print(f'� 访问地址: http://localhost:3000')
     print(f'🔗 账号管理: http://localhost:3000/admin/accounts')
     print(f'👤 默认账号: chaibingkun')
     print(f'🔑 默认密码: cbk4679585858')

@@ -157,6 +157,17 @@
             </div>
         </div>
 
+        <!-- 重置账单数据 -->
+        <div style="background:#fff5f5;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #fecaca;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <h3 style="font-size:14px;color:#dc2626;">⚠️ 危险操作</h3>
+                    <div style="font-size:12px;color:#888;">清空所有账单和认领记录，此操作不可撤销！</div>
+                </div>
+                <button class="btn btn-danger" onclick="confirmResetBills()">🗑️ 重置全部账单</button>
+            </div>
+        </div>
+
         <!-- 账号列表 -->
         <div style="overflow-x:auto;">
             <table>
@@ -576,6 +587,19 @@
             }
             // 否则保持登录界面显示
         })();
+
+        /** 重置全部账单数据 */
+        async function confirmResetBills() {
+            if (!confirm('⚠️ 确定要清空所有账单和认领记录吗？\n\n此操作不可撤销！')) return;
+            if (!confirm('二次确认：所有历史账单数据将被永久删除，确定继续？')) return;
+            try {
+                await apiCall('/admin/reset', { method: 'POST' });
+                showToast('✅ 已清空全部账单和认领数据', 'success');
+            } catch (e) {
+                console.error('❌ [重置账单] 重置失败:', e);
+                showToast('重置失败: ' + e.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
