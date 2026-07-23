@@ -1,0 +1,879 @@
+# 家庭报销管理系统 - 接口文档
+
+---
+
+## 一、项目总览
+
+```
+family-money/
+│
+├── frontend/                      # 前端静态文件
+│   └── index.html                 # 主应用（SPA单页应用）
+│
+├── backend/                       # 后端服务
+│   ├── app.py                     # Flask 服务入口（全部API在此实现）
+│   ├── account-manager.html       # 后端账号管理页面（管理员专用）
+│   ├── requirements.txt           # Python 依赖清单
+│   ├── users.json                 # 用户数据（自动生成）
+│   ├── bills.json                 # 账单数据（自动生成）
+│   └── claims.json                # 认领数据（自动生成）
+│
+├── docs/                          # 项目文档
+│   ├── 接口文档.txt               # ← 本文档
+│   └── index快速导览.txt          # 前端代码行号导航
+│
+├── 快捷工具/                      # 快捷启动工具
+│   ├── start.bat                  # 启动后端服务
+│   ├── close.bat                  # 停止后端服务
+│   ├── 首页 - 家庭报销管家.lnk    # 首页快捷方式
+│   └── 后台管理 - 账号管理.lnk    # 后台管理快捷方式
+│
+├── .gitignore                     # Git 忽略规则
+├── .venv/                         # Python 虚拟环境
+└── README.md                      # 项目说明
+```
+
+---
+
+## 二、后端接口详细文档
+
+### 基础信息
+
+| 项目 | 说明 |
+|------|------|
+| 技术栈 | **Flask** + **JSON 文件存储**（轻量级，无需数据库） |
+| 协议 | HTTP |
+| 数据格式 | JSON (`Content-Type: application/json`) |
+| 统一返回格式 | `{ "code": 0, "message": "提示信息", "data": {...} }` |
+| 认证方式 | **UUID Token**（放在请求头 `Authorization` 中） |
+| 默认后端地址 | `http://localhost:3000` |
+
+### 状态码规范
+
+| code | 含义 |
+|------|------|
+| 0 | 成功 |
+| 1001 | 账号或密码错误 |
+| 1002 | 认领失败（个人额度不足） |
+| 1003 | 认领失败（账单剩余额度不足） |
+| 1004 | 用户名已存在 |
+| 1005 | 不允许的操作（如删除自己） |
+| 401 | 未登录 / Token 失效 |
+| 403 | 权限不足 |
+| 404 | 资源不存在 |
+
+> **注意**: 实际后端使用简单 Token（UUID）而非 JWT，Token 不设过期时间，重启服务后所有 Token 失效需重新登录。
+
+---
+
+### 接口1：用户登录
+
+**请求**
+
+```
+POST /api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "chaibingkun",
+    "password": "cbk4679585858"
+}
+```
+
+**响应（成功）**
+
+```json
+{
+    "code": 0,
+    "message": "登录成功",
+    "data": {
+        "token": "a1b2c3d4-...",
+        "user_id": 1,
+        "username": "chaibingkun",
+        "name": "柴炳坤",
+        "role": "father",
+        "is_admin": true,
+        "max_commitment": 500
+    }
+}
+```
+
+**响应（失败）**
+
+```json
+{
+    "code": 1001,
+    "message": "账号或密码错误",
+    "data": null
+}
+```
+
+**字段说明**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| token | string | UUID 令牌，后续请求需在 Header 携带 |
+| user_id | int | 用户ID |
+| username | string | 登录账号 |
+| name | string | 显示名称 |
+| role | string | 角色：father / mother / son / daughter |
+| is_admin | bool | 是否管理员 |
+| max_commitment | float | 承诺最大报销金额 |
+
+> **预设账号**：
+> - `chaibingkun` / `cbk4679585858`（管理员账号，仅用于后台登录管理，不参与家庭成员记账）
+> - `aaa` / `123456`（妈妈，额度300）
+> - `son` / `123456`（儿子，额度100）
+> - `daughter` / `123456`（女儿，额度80）
+
+---
+
+### 接口2：获取仪表盘数据
+
+**请求**
+
+```
+GET /api/dashboard?user_id={当前登录用户ID}
+Authorization: Bearer {token}
+```
+
+| 参数 | 说明 |
+|------|------|
+| user_id | 必填，当前登录用户ID，用于标记"我的速览"中的当前用户 |
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "totalCommitment": 480,
+        "totalPending": 0,
+        "totalAvailable": 480,
+        "totalSettled": 0,
+        "members": [
+            {
+                "id": 2,
+                "username": "aaa",
+                "name": "妈妈",
+                "role": "mother",
+                "is_admin": false,
+                "max_commitment": 300,
+                "used": 0,
+                "remain": 300,
+                "receivable": 0,
+                "payable": 0
+            },
+            {
+                "id": 3,
+                "username": "son",
+                "name": "儿子",
+                "role": "son",
+                "is_admin": false,
+                "max_commitment": 100,
+                "used": 0,
+                "remain": 100,
+                "receivable": 0,
+                "payable": 0
+            },
+            {
+                "id": 4,
+                "username": "daughter",
+                "name": "女儿",
+                "role": "daughter",
+                "is_admin": false,
+                "max_commitment": 80,
+                "used": 0,
+                "remain": 80,
+                "receivable": 0,
+                "payable": 0
+            }
+        ],
+        "currentUser": {
+            "id": 2,
+            "username": "aaa",
+            "name": "妈妈",
+            "role": "mother",
+            "is_admin": false,
+            "max_commitment": 300,
+            "used": 0,
+            "remain": 300,
+            "receivable": 0,
+            "payable": 0
+        }
+    }
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| totalCommitment | 全体成员承诺总额（不含管理员账号`chaibingkun`） |
+| totalPending | 待认领总额 |
+| totalAvailable | 可用额度（总额 - 待认领） |
+| totalSettled | 已结清账单数 |
+| members[] | 所有家庭成员信息（管理员账号`chaibingkun`不在此列） |
+| currentUser | 当前登录用户信息（通过`user_id`参数匹配） |
+
+---
+
+### 接口3：获取账单列表
+
+**请求**
+
+```
+GET /api/bills?status=claiming
+Authorization: Bearer {token}
+```
+
+**参数说明**
+
+| 参数 | 可选值 | 说明 |
+|------|--------|------|
+| status | `pending` / `claiming` / `transferring` / `settled` / `all` | 按状态筛选，不传则返回所有未结清的 |
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": [
+        {
+            "id": 1,
+            "title": "超市采购",
+            "total_amount": 100,
+            "purchaser_id": 1,
+            "purchaser_name": "柴炳坤",
+            "status": "claiming",
+            "claimed_amount": 70,
+            "remaining": 30,
+            "created_at": "2026-07-20 10:00:00",
+            "settled_at": null
+        }
+    ]
+}
+```
+
+---
+
+### 接口4：获取账单详情
+
+**请求**
+
+```
+GET /api/bills/{billId}
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "id": 1,
+        "title": "超市采购",
+        "total_amount": 100,
+        "purchaser_id": 1,
+        "purchaser_name": "柴炳坤",
+        "status": "claiming",
+        "claimed_amount": 70,
+        "remaining": 30,
+        "created_at": "2026-07-20 10:00:00",
+        "settled_at": null,
+        "claims": [
+            {
+                "id": 1,
+                "claimant_id": 2,
+                "claimant_name": "妈妈",
+                "amount": 30,
+                "status": "pending",
+                "status_text": "待确认",
+                "status_class": "pending",
+                "payer_confirmed": false,
+                "receiver_confirmed": false,
+                "created_at": "2026-07-20 11:00:00"
+            }
+        ]
+    }
+}
+```
+
+---
+
+### 接口5：创建账单
+
+**请求**
+
+```
+POST /api/bills
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "title": "超市采购",
+    "total_amount": 100,
+    "purchaser_id": 1
+}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "账单创建成功",
+    "data": {
+        "id": 4,
+        "title": "超市采购",
+        "total_amount": 100,
+        "purchaser_id": 1,
+        "status": "pending",
+        "created_at": "2026-07-23 15:30:00"
+    }
+}
+```
+
+---
+
+### 接口6：认领报销
+
+**请求**
+
+```
+POST /api/claims
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "bill_id": 1,
+    "claimant_id": 2,
+    "amount": 30
+}
+```
+
+**校验逻辑（后端实现）：**
+1. ✅ 账单是否存在
+2. ✅ 已认领总额 + 本次认领额 <= 账单总金额
+3. ✅ 该用户已认领总额 + 本次认领额 <= 该用户承诺总额
+
+**响应（成功）**
+
+```json
+{
+    "code": 0,
+    "message": "认领成功",
+    "data": {
+        "bill_status": "claiming",
+        "remaining": 0
+    }
+}
+```
+
+**响应（失败 - 个人额度不足）**
+
+```json
+{
+    "code": 1002,
+    "message": "认领失败：您的剩余额度不足（剩余 10 元）"
+}
+```
+
+**响应（失败 - 账单余额不足）**
+
+```json
+{
+    "code": 1003,
+    "message": "认领失败：该账单剩余额度不足（剩余 10 元）"
+}
+```
+
+---
+
+### 接口7：查账结算
+
+**请求**
+
+```
+GET /api/settlement/{userId}
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "payable": [
+            {
+                "claim_id": 1,
+                "bill_id": 1,
+                "bill_title": "超市采购",
+                "receiver_name": "柴炳坤",
+                "amount": 30,
+                "payer_confirmed": false,
+                "receiver_confirmed": false
+            }
+        ],
+        "receivable": [
+            {
+                "claim_id": 3,
+                "bill_id": 2,
+                "bill_title": "水电燃气费",
+                "payer_name": "儿子",
+                "amount": 80,
+                "payer_confirmed": true,
+                "receiver_confirmed": false
+            }
+        ],
+        "total_payable": 30,
+        "total_receivable": 80
+    }
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| payable[] | 该用户需要付给别人的（该用户是认领人） |
+| receivable[] | 该用户应收取的（该用户是购买人） |
+
+---
+
+### 接口8：付款方确认转账
+
+**请求**
+
+```
+PUT /api/claims/{claimId}/confirm-payer
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "已确认转账",
+    "data": null
+}
+```
+
+**自动行为**：当 `payer_confirmed` 和 `receiver_confirmed` 都为 `true` 时，该认领记录状态自动变为 `settled`。若账单下所有认领记录都已 `settled`，账单状态自动变为 `settled`。
+
+---
+
+### 接口9：收款方确认收款
+
+**请求**
+
+```
+PUT /api/claims/{claimId}/confirm-receiver
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "已确认收款",
+    "data": null
+}
+```
+
+---
+
+### 接口10：获取激励榜
+
+**请求**
+
+```
+GET /api/ranking
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "medals": [
+            { "user_id": 1, "name": "柴炳坤", "count": 5 },
+            { "user_id": 2, "name": "妈妈", "count": 3 }
+        ],
+        "shoppers": [
+            { "user_id": 1, "name": "柴炳坤", "count": 4 },
+            { "user_id": 2, "name": "妈妈", "count": 3 }
+        ]
+    }
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| medals[] | 闪电勋章榜（按已结清认领次数排序，取前5） |
+| shoppers[] | 采购达人榜（按创建账单次数排序，取前5） |
+
+---
+
+### 接口11：后台 - 获取所有成员
+
+**请求**
+
+```
+GET /api/admin/members
+Authorization: Bearer {token}
+```
+
+**权限要求**：当前用户 `is_admin = true`
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": [
+        {
+            "id": 1,
+            "username": "chaibingkun",
+            "name": "柴炳坤",
+            "role": "father",
+            "is_admin": true,
+            "max_commitment": 500,
+            "used": 100,
+            "remain": 400,
+            "receivable": 80,
+            "payable": 20
+        }
+    ]
+}
+```
+
+---
+
+### 接口12：后台 - 获取所有账单
+
+**请求**
+
+```
+GET /api/admin/bills
+Authorization: Bearer {token}
+```
+
+**权限要求**：当前用户 `is_admin = true`
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": [
+        {
+            "id": 1,
+            "title": "超市采购",
+            "total_amount": 100,
+            "purchaser_id": 1,
+            "purchaser_name": "柴炳坤",
+            "status": "settled",
+            "status_text": "已结清",
+            "claimed_amount": 100,
+            "created_at": "2026-07-20 10:00:00",
+            "settled_at": "2026-07-21 09:00:00"
+        }
+    ]
+}
+```
+
+---
+
+### 接口13：后台 - 管理员强制结清
+
+**请求**
+
+```
+PUT /api/admin/claims/{claimId}/force-settle
+Authorization: Bearer {token}
+```
+
+**权限要求**：当前用户 `is_admin = true`
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "强制结清成功",
+    "data": null
+}
+```
+
+---
+
+### 接口14：后台 - 修改用户承诺额度
+
+**请求**
+
+```
+PUT /api/admin/users/{userId}/commitment
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "max_commitment": 500
+}
+```
+
+**权限要求**：当前用户 `is_admin = true`
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "修改成功",
+    "data": null
+}
+```
+
+---
+
+### 接口15~19：账号管理 CRUD（额外接口）
+
+以下接口服务于 `account-manager.html` 账号管理页面，是文档规划外的附加接口。
+
+#### 15. 获取所有账号（简化版）
+
+```
+GET /api/admin/users
+Authorization: Bearer {token}
+```
+
+返回所有用户的基本信息（不含 used/remain 等统计）。
+
+#### 16. 创建新账号
+
+```
+POST /api/admin/users
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "newuser",
+    "password": "123456",
+    "name": "新成员",
+    "role": "son",
+    "is_admin": false,
+    "max_commitment": 100
+}
+```
+
+#### 17. 修改账号信息
+
+```
+PUT /api/admin/users/{userId}
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "name": "新名字",
+    "role": "daughter",
+    "is_admin": true,
+    "max_commitment": 200,
+    "password": "newpass"
+}
+```
+
+#### 18. 删除账号
+
+```
+DELETE /api/admin/users/{userId}
+Authorization: Bearer {token}
+```
+
+> ⚠️ 不能删除 `user_id = 1`（初始管理员账号）。
+
+#### 19. 静态文件服务
+
+```
+GET /          → 返回 frontend/index.html
+GET /{path}    → 返回 frontend/ 下的静态文件
+```
+
+Flask 后端同时作为静态文件服务器，提供前端页面和后端管理页面。
+
+| 路径 | 说明 |
+|------|------|
+| `/` | 前端主应用 `frontend/index.html` |
+| `/admin/accounts` | 后端账号管理 `backend/account-manager.html` |
+| `/{path}` | `frontend/` 下的其他静态文件 |
+
+---
+
+## 三、后端实现说明（当前：Flask + JSON）
+
+### 技术选型
+
+| 项目 | 实际方案 |
+|------|----------|
+| Web 框架 | **Flask 3.x** |
+| 数据存储 | **JSON 文件**（`backend/*.json`） |
+| 认证方式 | **UUID Token**（服务重启后失效） |
+| 跨域 | `flask-cors`，允许所有来源 |
+| 密码 | **明文存储**（演示项目，生产环境建议加密） |
+
+### 核心文件
+
+| 文件 | 说明 |
+|------|------|
+| `backend/app.py` | **单文件实现全部 19 个接口**，约 600 行 |
+| `backend/requirements.txt` | 仅依赖 `flask` + `flask-cors` |
+| `backend/users.json` | 用户数据，首次启动自动生成预设账号 |
+| `backend/bills.json` | 账单数据，初始为空 |
+| `backend/claims.json` | 认领记录数据，初始为空 |
+
+### 与原始设计文档的差异
+
+| 原始设计（接口文档旧版） | 实际实现（app.py） |
+|---|---|
+| FastAPI + SQLAlchemy + MySQL | Flask + JSON 文件存储 |
+| JWT Bearer Token | UUID 简单 Token |
+| bcrypt 密码加密 | 明文密码 |
+| 模块化 routers/ 目录 | 单文件 app.py |
+| 14 个接口 | 19 个接口（含账号管理 CRUD） |
+
+---
+
+## 四、如何部署
+
+### 方式一：本地运行（开发）
+
+```bash
+# 1. 进入后端目录
+cd backend
+
+# 2. 安装依赖
+pip install -r requirements.txt
+
+# 3. 启动服务
+python app.py
+
+# 4. 打开浏览器访问
+# http://localhost:3000
+```
+
+### 方式二：前端独立部署（仅页面）
+
+```bash
+# 直接用浏览器打开 frontend/index.html
+# 此时 USE_MOCK = true，使用演示数据，无需后端
+```
+
+### 对接说明
+
+1. 修改 `frontend/index.html` 中将 `USE_MOCK` 改为 `false`
+2. 默认后端地址 `http://localhost:3000`，如需修改调整 `API_BASE` 变量
+3. 确保后端服务已启动
+4. 打开前端页面，使用预设账号登录
+
+---
+
+## 五、数据存储结构（JSON 文件）
+
+系统使用 JSON 文件替代数据库，文件位于 `backend/` 目录下。
+
+### users.json
+
+```json
+[
+    {
+        "id": 1,
+        "username": "chaibingkun",
+        "password": "cbk4679585858",
+        "name": "柴炳坤",
+        "role": "father",
+        "is_admin": true,
+        "max_commitment": 500
+    }
+]
+```
+
+### bills.json
+
+```json
+[
+    {
+        "id": 1,
+        "title": "超市采购",
+        "total_amount": 100,
+        "purchaser_id": 1,
+        "status": "claiming",
+        "created_at": "2026-07-20 10:00:00",
+        "settled_at": null
+    }
+]
+```
+
+**状态流转**：`pending` → `claiming` → `transferring` → `settled`
+
+### claims.json
+
+```json
+[
+    {
+        "id": 1,
+        "bill_id": 1,
+        "claimant_id": 2,
+        "amount": 30,
+        "payer_confirmed": false,
+        "receiver_confirmed": false,
+        "status": "pending",
+        "created_at": "2026-07-20 11:00:00",
+        "settled_at": null
+    }
+]
+```
+
+**状态流转**：`pending` → 双方确认后 → `settled`
+
+### 预设账号数据
+
+| 账号 | 密码 | 姓名 | 角色 | 管理员 | 额度 |
+|------|------|------|------|--------|------|
+| chaibingkun | cbk4679585858 | 柴炳坤 | father | ✅ | 0（仅后台管理） |
+| aaa | 123456 | 妈妈 | mother | ❌ | 300 |
+| son | 123456 | 儿子 | son | ❌ | 100 |
+| daughter | 123456 | 女儿 | daughter | ❌ | 80 |
+
+---
+
+## 六、文件用途速查
+
+| 文件 | 用途 |
+|------|------|
+| `frontend/index.html` | 完整前端，含登录页 + 全部功能页面（仪表盘/账单/查账/激励榜/管理） |
+| `backend/account-manager.html` | 后端账号管理页面（添加/编辑/删除成员，管理员专用） |
+| `backend/app.py` | Flask 后端服务，实现全部 19 个 API 接口 |
+| `backend/requirements.txt` | Python 依赖清单 |
+| `backend/*.json` | JSON 数据文件（users/bills/claims，自动生成） |
+| `docs/接口文档.txt` | ← 本文档 |
+| `docs/index快速导览.txt` | 前端代码行号快速定位指南 |

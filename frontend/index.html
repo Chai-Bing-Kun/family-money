@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>家庭报销管理系统</title>
+    <style>
+        /* ========== 全局重置 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* ========== 登录页面 ========== */
+        #loginPage {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #4a6cf7, #6a3de8);
+        }
+        .login-box {
+            background: #fff;
+            padding: 48px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            max-width: 92%;
+        }
+        .login-box .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .login-box .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+        .login-box .form-group {
+            margin-bottom: 18px;
+        }
+        .login-box .form-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #d0d5dd;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border 0.2s;
+        }
+        .login-box .form-group input:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.12);
+        }
+        .login-box .btn-login {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            background: #4a6cf7;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .login-box .btn-login:hover {
+            background: #3a5cd6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(74, 108, 247, 0.35);
+        }
+        .login-box .demo-hint {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        .login-box .demo-hint code {
+            background: #f0f2f5;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #4a6cf7;
+        }
+
+        /* ========== 主应用容器 ========== */
+        #appContainer {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        /* ========== 顶部导航 ========== */
+        .navbar {
+            background: linear-gradient(135deg, #4a6cf7, #6a3de8);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .navbar-brand {
+            color: #fff;
+            font-size: 19px;
+            font-weight: 700;
+        }
+        .navbar-brand span {
+            opacity: 0.7;
+            font-weight: 400;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .navbar-user {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .navbar-user .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+        .btn-logout {
+            padding: 6px 18px;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            background: transparent;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #fff;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .nav-tab {
+            padding: 7px 16px;
+            border: none;
+            background: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.25s;
+        }
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #fff;
+        }
+        .nav-tab.active {
+            background: #fff;
+            color: #4a6cf7;
+        }
+
+        /* ========== 页面容器 ========== */
+        .page {
+            display: none;
+            padding: 24px 28px 32px;
+            animation: fadeIn 0.3s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-title {
+            font-size: 21px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .page-subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 22px;
+        }
+
+        /* ========== 卡片 ========== */
+        .card {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 14px;
+            border: 1px solid #e8ecf1;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .card-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-pending {
+            background: #fff3e0;
+            color: #e67e22;
+        }
+        .badge-claiming {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .badge-transferring {
+            background: #fce4ec;
+            color: #c62828;
+        }
+        .badge-settled {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* ========== 统计卡片 ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid #e8ecf1;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #4a6cf7;
+        }
+        .stat-number.danger {
+            color: #e74c3c;
+        }
+        .stat-number.success {
+            color: #2ecc71;
+        }
+        .stat-number.warning {
+            color: #f39c12;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        /* ========== 成员基金池 ========== */
+        .member-pool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .member-pool-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 14px 16px;
+            border: 1px solid #e8ecf1;
+            text-align: center;
+        }
+        .member-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .member-amount {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 4px 0 2px;
+        }
+        .member-detail {
+            font-size: 12px;
+            color: #888;
+        }
+        .member-detail .used {
+            color: #e74c3c;
+        }
+        .member-detail .remain {
+            color: #2ecc71;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            background: #e8ecf1;
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s;
+            background: linear-gradient(90deg, #4a6cf7, #6a3de8);
+        }
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        /* ========== 表单 ========== */
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 9px 14px;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.2s;
+            background: #fff;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a6cf7;
+            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.12);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .btn {
+            padding: 9px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #4a6cf7;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #3a5cd6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
+        }
+        .btn-success {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #4a6cf7;
+            border: 1.5px solid #4a6cf7;
+        }
+        .btn-outline:hover {
+            background: #4a6cf7;
+            color: #fff;
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+        .btn-block {
+            width: 100%;
+        }
+
+        /* ========== 账单列表 ========== */
+        .bill-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .bill-item:last-child {
+            border-bottom: none;
+        }
+        .bill-info {
+            flex: 1;
+            min-width: 150px;
+        }
+        .bill-info .bill-title {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .bill-info .bill-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .bill-amounts {
+            text-align: right;
+            min-width: 110px;
+        }
+        .bill-amounts .total {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .bill-amounts .detail {
+            font-size: 12px;
+            color: #888;
+        }
+        .bill-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ========== 认领记录 ========== */
+        .claim-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 14px;
+        }
+        .claim-item:last-child {
+            border-bottom: none;
+        }
+        .claim-status {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+        .claim-status.pending {
+            background: #fff3e0;
+            color: #e67e22;
+        }
+        .claim-status.settled {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        /* ========== 结算清单 ========== */
+        .settlement-group {
+            margin-bottom: 18px;
+        }
+        .settlement-group h4 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .settlement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 14px;
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            border: 1px solid #e8ecf1;
+        }
+        .settlement-item .amount {
+            font-weight: 700;
+            color: #4a6cf7;
+        }
+        .settlement-item .amount.pay {
+            color: #e74c3c;
+        }
+        .settlement-item .amount.receive {
+            color: #2ecc71;
+        }
+
+        /* ========== 激励榜 ========== */
+        .rank-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+        }
+        .rank-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e8ecf1;
+            text-align: center;
+        }
+        .rank-card .rank-emoji {
+            font-size: 32px;
+        }
+        .rank-card .rank-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin: 4px 0;
+        }
+        .rank-card .rank-number {
+            font-size: 22px;
+            font-weight: 700;
+            color: #4a6cf7;
+        }
+        .rank-card .rank-badge {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* ========== Toast 提示 ========== */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 22px;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            min-width: 200px;
+        }
+        .toast.success {
+            background: #2ecc71;
+        }
+        .toast.error {
+            background: #e74c3c;
+        }
+        .toast.info {
+            background: #4a6cf7;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(40px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ========== 模态框 ========== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9998;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 30px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-box h3 {
+            margin-bottom: 14px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            justify-content: flex-end;
+        }
+
+        /* ========== 空状态 ========== */
+        .empty-state {
+            text-align: center;
+            padding: 36px 20px;
+            color: #aaa;
+        }
+        .empty-state .emoji {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 10px 16px;
+            }
+            .navbar-brand {
+                font-size: 16px;
+            }
+            .nav-tab {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+            .page {
+                padding: 14px 14px 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .member-pool-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .bill-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .bill-amounts {
+                text-align: left;
+            }
+            .rank-list {
+                grid-template-columns: 1fr 1fr;
+            }
+            .login-box {
+                padding: 32px 24px;
+            }
+        }
+        @media (max-width: 400px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .member-pool-grid {
+                grid-template-columns: 1fr;
+            }
+            .rank-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 全局错误覆盖层 ===== -->
+    <div id="globalErrorOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:99999;justify-content:center;align-items:center;backdrop-filter:blur(6px);">
+        <div style="background:#fff;border-radius:16px;padding:32px 36px;max-width:460px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+            <h3 id="globalErrorTitle" style="margin-bottom:8px;color:#e74c3c;">网络连接失败</h3>
+            <p id="globalErrorMsg" style="color:#666;font-size:14px;line-height:1.6;margin-bottom:16px;">无法连接到后端服务器，请检查服务是否启动。</p>
+            <div id="globalErrorDetail" style="background:#f8f9fc;padding:10px 14px;border-radius:8px;font-size:12px;color:#888;text-align:left;margin-bottom:16px;word-break:break-all;display:none;"></div>
+            <button onclick="hideGlobalError()" style="padding:10px 28px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">我知道了</button>
+            <button onclick="hideGlobalError();retryLastAction();" style="padding:10px 28px;border:1.5px solid #4a6cf7;border-radius:8px;background:transparent;color:#4a6cf7;font-size:14px;font-weight:600;cursor:pointer;margin-left:8px;">重试</button>
+        </div>
+    </div>
+
+    <!-- ===== Toast 容器 ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== 模态框 ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box" id="modalBox">
+            <h3 id="modalTitle">提示</h3>
+            <div id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-sm" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary btn-sm" id="modalConfirmBtn" onclick="modalConfirm()">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- 登录页面 -->
+    <!-- ================================================================ -->
+    <div id="loginPage">
+        <div class="login-box">
+            <div class="logo">🏠 家庭报销管家</div>
+            <div class="subtitle">家庭成员专用 · 请登录</div>
+            <div class="form-group">
+                <label>账号</label>
+                <input type="text" id="loginUsername" placeholder="请输入账号" />
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="loginPassword" placeholder="请输入密码" onkeydown="if(event.key==='Enter') handleLogin()" />
+            </div>
+            <button class="btn-login" onclick="handleLogin()">登 录</button>
+            <div class="demo-hint">
+                演示账号：<code>aaa</code> / <code>123456</code> ｜ <code>son</code> / <code>123456</code> ｜ <code>daughter</code> / <code>123456</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- 主应用容器 -->
+    <!-- ================================================================ -->
+    <div id="appContainer">
+
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                🏠 家庭报销管家
+                <span>v1.0</span>
+            </div>
+            <div class="navbar-right">
+                <span class="navbar-user" id="navbarUser">
+                    👤 未登录
+                    <span class="role-badge" id="navbarRole">-</span>
+                </span>
+                <button class="btn-logout" onclick="handleLogout()">退出</button>
+                <div class="nav-tabs">
+                    <button class="nav-tab active" data-page="dashboard">📊 仪表盘</button>
+                    <button class="nav-tab" data-page="bills">📋 账单</button>
+                    <button class="nav-tab" data-page="settlement">💰 查账</button>
+                    <button class="nav-tab" data-page="ranking">🏆 激励榜</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- 页面1：仪表盘 -->
+        <!-- ============================================================ -->
+        <div class="page active" id="page-dashboard">
+            <h2 class="page-title">📊 家庭财务仪表盘</h2>
+            <p class="page-subtitle">实时查看家庭基金池与个人信用额度</p>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statTotalCommitment">0</div>
+                    <div class="stat-label">家庭总承诺基金</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number danger" id="statTotalPending">0</div>
+                    <div class="stat-label">待报销总额</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number success" id="statTotalAvailable">0</div>
+                    <div class="stat-label">家庭可用心理额度</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number warning" id="statTotalSettled">0</div>
+                    <div class="stat-label">已结清账单数</div>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom:10px;font-size:15px;">👨‍👩‍👧‍👦 成员基金池</h3>
+            <div class="member-pool-grid" id="memberPoolGrid"></div>
+
+            <div class="card" style="background:#fff;border:2px solid #4a6cf7;">
+                <div class="card-header">
+                    <span class="card-title">🧑 我的速览</span>
+                    <span class="card-badge badge-settled" id="myIdBadge">用户 ID: -</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+                    <div><strong>承诺总额</strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
+                    <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
+                    <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
+                    <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
+                    <div><strong>应付款</strong><br /><span id="myPayable" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 页面2：账单 -->
+        <!-- ============================================================ -->
+        <div class="page" id="page-bills">
+            <h2 class="page-title">📋 账单管理</h2>
+            <p class="page-subtitle">创建新账单或认领已有账单</p>
+
+            <div class="card" style="background:#fff;border:2px dashed #d0d5dd;">
+                <div class="card-header">
+                    <span class="card-title">➕ 创建新账单</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>账单名称</label>
+                        <input type="text" id="billTitle" placeholder="如：超市采购、水电费..." />
+                    </div>
+                    <div class="form-group">
+                        <label>总金额（元）</label>
+                        <input type="number" id="billAmount" placeholder="0.00" step="0.01" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>购买人</label>
+                    <select id="billPurchaser"></select>
+                </div>
+                <button class="btn btn-primary" onclick="createBill()">📤 提交账单</button>
+            </div>
+
+            <h3 style="margin:20px 0 10px;font-size:15px;">📄 待报销账单</h3>
+            <div id="billList"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 页面3：查账 -->
+        <!-- ============================================================ -->
+        <div class="page" id="page-settlement">
+            <h2 class="page-title">💰 我的查账与结算</h2>
+            <p class="page-subtitle">查看需要转账和应收的明细，确认支付后点击「我已转账」</p>
+            <div id="settlementContent"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 页面4：激励榜 -->
+        <!-- ============================================================ -->
+        <div class="page" id="page-ranking">
+            <h2 class="page-title">🏆 激励榜</h2>
+            <p class="page-subtitle">温和正向激励，鼓励为家庭付出</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div>
+                    <h3 style="font-size:15px;margin-bottom:10px;">⚡ 闪电勋章</h3>
+                    <div class="rank-list" id="medalRank"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:15px;margin-bottom:10px;">🛒 本周采购达人</h3>
+                    <div class="rank-list" id="shopperRank"></div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:14px;background:#fff8e1;border-color:#ffd54f;">
+                <span style="font-size:13px;">⏰ <strong>超时提醒：</strong>任何账单超过 3 天未完全认领，系统将自动 @ 全体成员</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- JavaScript -->
+    <!-- ================================================================ -->
+    <script>
+        // ================================================================
+        // 1. 配置
+        // ================================================================
+
+        // 后端地址（对接真实后端时修改）
+        const API_BASE = 'http://localhost:3000/api';
+
+        // 是否使用 Mock 数据（true=演示模式，false=对接后端）
+        const USE_MOCK = false;
+
+        // ================================================================
+        // 1.5 全局错误处理
+        // ================================================================
+
+        // 存储上一次失败的操作，用于"重试"按钮
+        let lastFailedAction = null;
+
+        /** 显示全局错误弹窗 */
+        function showGlobalError(title, message, detail = null) {
+            document.getElementById('globalErrorTitle').textContent = title || '发生错误';
+            document.getElementById('globalErrorMsg').textContent = message || '未知错误，请稍后重试';
+            const detailEl = document.getElementById('globalErrorDetail');
+            if (detail) {
+                detailEl.textContent = `📋 详细信息: ${detail}`;
+                detailEl.style.display = 'block';
+            } else {
+                detailEl.style.display = 'none';
+            }
+            document.getElementById('globalErrorOverlay').style.display = 'flex';
+        }
+
+        /** 隐藏全局错误弹窗 */
+        function hideGlobalError() {
+            document.getElementById('globalErrorOverlay').style.display = 'none';
+        }
+
+        /** 重试上一次失败的操作 */
+        function retryLastAction() {
+            if (lastFailedAction && typeof lastFailedAction === 'function') {
+                lastFailedAction();
+                lastFailedAction = null;
+            }
+        }
+
+        /** 全局网络错误检测 - 捕获未处理的 Promise 错误 */
+        window.addEventListener('unhandledrejection', function(event) {
+            const error = event.reason;
+            if (error && error.message && error.message.includes('fetch')) {
+                console.error('🌐 [全局网络错误] 未捕获的 fetch 异常:', error.message);
+                showGlobalError(
+                    '网络连接失败',
+                    '无法连接到后端服务器，请确保后端服务已启动（在 backend 目录下运行 python app.py）',
+                    `错误类型: ${error.name}\n错误详情: ${error.message}`
+                );
+            }
+        });
+
+        /** 全局 JS 运行时错误捕获 */
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('❌ [全局JS错误]', message, 'at', source, lineno, colno);
+            // 不要显示频繁的样式/脚本无关错误，避免打扰用户
+            if (message && !message.includes('ResizeObserver') && !message.includes('Script error')) {
+                console.log('📋 [错误位置]', source, `第${lineno}行 第${colno}列`);
+            }
+            return false; // 让默认错误处理继续执行
+        };
+
+        /** 检测后端连接是否正常（非 Mock 模式时使用） */
+        async function checkBackendConnection() {
+            if (USE_MOCK) return true;
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const response = await fetch(`${API_BASE}/dashboard`, {
+                    method: 'GET',
+                    signal: controller.signal,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    console.log('✅ [后端连接] 后端服务连接正常');
+                    return true;
+                } else {
+                    console.warn('⚠️ [后端连接] 后端返回异常状态码:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.error('❌ [后端连接] 连接超时（5秒）');
+                } else {
+                    console.error('❌ [后端连接] 无法连接到后端:', error.message);
+                }
+                showGlobalError(
+                    '无法连接到后端服务',
+                    '请确保已在 backend 目录下运行 python app.py 启动了后端服务',
+                    `API地址: ${API_BASE}\n错误: ${error.message || '连接超时或拒绝连接'}`
+                );
+                return false;
+            }
+        }
+
+        // ================================================================
+        // 2. Mock 数据
+        // ================================================================
+
+        // 用户数据（含角色）
+        const mockUsers = [
+            { id: 1, username: 'aaa', password: '123456', name: '妈妈', role: 'mother', max_commitment: 300,
+                is_admin: false },
+            { id: 2, username: 'son', password: '123456', name: '儿子', role: 'son', max_commitment: 100, is_admin: false },
+            { id: 3, username: 'daughter', password: '123456', name: '女儿', role: 'daughter', max_commitment: 80,
+                is_admin: false },
+        ];
+
+        // 当前登录用户（模拟）
+        let currentUser = null;
+        let authToken = null;
+
+        // 账单数据
+        let mockBills = [];
+
+        let mockClaims = [];
+
+        // 激励数据
+        const mockMedals = [];
+        const mockShopperRank = [];
+
+
+        // ================================================================
+        // 3. 工具函数
+        // ================================================================
+
+        function getUser(id) { return mockUsers.find(u => u.id === id); }
+
+        function getUserName(id) { const u = getUser(id); return u ? u.name : '未知'; }
+
+        function getUserRole(id) { const u = getUser(id); return u ? u.role : ''; }
+
+        function getClaimsByBill(billId) { return mockClaims.filter(c => c.bill_id === billId); }
+
+        function getClaimedAmount(billId) {
+            return mockClaims.filter(c => c.bill_id === billId && c.status === 'pending')
+                .reduce((s, c) => s + c.amount, 0);
+        }
+
+        function getClaimedAmountByUser(userId) {
+            return mockClaims.filter(c => c.claimant_id === userId && c.status === 'pending')
+                .reduce((s, c) => s + c.amount, 0);
+        }
+
+        function getReceivable(userId) {
+            return mockClaims.filter(c => {
+                const bill = mockBills.find(b => b.id === c.bill_id);
+                return bill && bill.purchaser_id === userId && c.status === 'pending';
+            }).reduce((s, c) => s + c.amount, 0);
+        }
+
+        function getPayable(userId) {
+            return mockClaims.filter(c => c.claimant_id === userId && c.status === 'pending')
+                .reduce((s, c) => s + c.amount, 0);
+        }
+
+        function getBillStatusText(status) {
+            const map = { 'pending': '待认领', 'claiming': '认领中', 'transferring': '待转账', 'settled': '已结清' };
+            return map[status] || status;
+        }
+
+        function getBillStatusBadge(status) {
+            const map = { 'pending': 'badge-pending', 'claiming': 'badge-claiming', 'transferring': 'badge-transferring',
+                'settled': 'badge-settled' };
+            return map[status] || '';
+        }
+
+        function getClaimStatusText(c) {
+            if (c.status === 'settled') return '已结清';
+            if (c.payer_confirmed && c.receiver_confirmed) return '双方已确认';
+            if (c.payer_confirmed) return '付款方已确认';
+            if (c.receiver_confirmed) return '收款方已确认';
+            return '待确认';
+        }
+
+        function getClaimStatusClass(c) {
+            if (c.status === 'settled') return 'settled';
+            if (c.payer_confirmed && c.receiver_confirmed) return 'settled';
+            return 'pending';
+        }
+
+        const ROLE_MAP = {
+            'father': '爸爸 👨',
+            'mother': '妈妈 👩',
+            'son': '儿子 🧑',
+            'daughter': '女儿 👧'
+        };
+
+        function getRoleDisplay(role) { return ROLE_MAP[role] || role; }
+
+
+        // ================================================================
+        // 4. Toast / Modal
+        // ================================================================
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        let modalCallback = null;
+
+        function openModal(title, bodyHTML, confirmText = '确认', callback = null) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = bodyHTML;
+            document.getElementById('modalConfirmBtn').textContent = confirmText;
+            document.getElementById('modalOverlay').classList.add('open');
+            modalCallback = callback;
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+            modalCallback = null;
+        }
+
+        function modalConfirm() {
+            if (modalCallback) modalCallback();
+            closeModal();
+        }
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+
+        // ================================================================
+        // 5. API 调用核心
+        // ================================================================
+
+        // 获取存储的 token
+        function getToken() {
+            return localStorage.getItem('family_token');
+        }
+
+        // 获取当前用户信息
+        function getStoredUser() {
+            const data = localStorage.getItem('family_user');
+            return data ? JSON.parse(data) : null;
+        }
+
+        // 保存登录状态
+        function saveAuth(token, user) {
+            localStorage.setItem('family_token', token);
+            localStorage.setItem('family_user', JSON.stringify(user));
+        }
+
+        // 清除登录状态
+        function clearAuth() {
+            localStorage.removeItem('family_token');
+            localStorage.removeItem('family_user');
+        }
+
+        /**
+         * 统一的 API 调用（增强版：详细错误检测和日志）
+         */
+        async function callAPI(endpoint, options = {}) {
+            const requestId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+            const method = options.method || 'GET';
+            
+            // 如果使用 Mock 模式
+            if (USE_MOCK) {
+                console.log(`📦 [Mock ${requestId}] ${method} ${endpoint}`, options.body || '');
+                return mockApiCall(endpoint, options);
+            }
+
+            // 真实后端调用
+            const url = API_BASE + endpoint;
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(options.headers || {}),
+            };
+
+            // 自动添加 token（除了登录接口）
+            if (endpoint !== '/auth/login') {
+                const token = getToken();
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+
+            const config = {
+                ...options,
+                headers,
+            };
+            if (options.body && typeof options.body === 'object') {
+                config.body = JSON.stringify(options.body);
+            }
+
+            console.log(`🌐 [API ${requestId}] ${method} ${url}`, options.body ? '(有请求体)' : '');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url, config);
+                const elapsed = Date.now() - startTime;
+                console.log(`⏱️ [API ${requestId}] 响应时间: ${elapsed}ms, 状态码: ${response.status}`);
+
+                // 检查 HTTP 状态码
+                if (!response.ok) {
+                    let errorMsg = `服务器返回错误状态 (${response.status})`;
+                    if (response.status === 0) errorMsg = '网络请求被阻止（可能是 CORS 跨域问题）';
+                    else if (response.status === 404) errorMsg = `接口地址不存在 (${response.status}): ${endpoint}，请检查后端路由`;
+                    else if (response.status === 500) errorMsg = `服务器内部错误 (${response.status})，请查看后端控制台日志`;
+                    else if (response.status === 502) errorMsg = '后端服务暂时不可用 (502 Bad Gateway)';
+                    else if (response.status === 503) errorMsg = '后端服务维护中 (503 Service Unavailable)';
+                    
+                    console.error(`❌ [API ${requestId}] ${errorMsg}`);
+                    throw new Error(errorMsg);
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error(`❌ [API ${requestId}] JSON 解析失败:`, jsonError);
+                    throw new Error('服务器返回的数据格式异常，无法解析为 JSON');
+                }
+
+                if (data.code === 0) {
+                    console.log(`✅ [API ${requestId}] 请求成功`);
+                    return data;
+                } else if (data.code === 401) {
+                    console.warn(`⚠️ [API ${requestId}] Token 已失效，跳转登录`);
+                    showToast('登录已过期，请重新登录', 'error');
+                    handleLogout();
+                    throw new Error(data.message || '未授权');
+                } else if (data.code === 403) {
+                    console.warn(`⚠️ [API ${requestId}] 权限不足: ${data.message}`);
+                    throw new Error(data.message || '权限不足');
+                } else {
+                    console.warn(`⚠️ [API ${requestId}] 业务错误 (code=${data.code}): ${data.message}`);
+                    throw new Error(data.message || '请求失败');
+                }
+            } catch (error) {
+                // 区分不同类型的网络错误
+                let errorCategory = '';
+                if (error.message.includes('fetch') || error.name === 'TypeError') {
+                    errorCategory = '网络连接失败';
+                    // 更具体的检测
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        console.error(`❌ [API ${requestId}] 无法连接到后端: ${API_BASE}`);
+                        console.error('❌ 请确认后端服务已启动: cd backend && python app.py');
+                        showToast(`⚠️ 无法连接到后端服务器，请检查后端是否启动`, 'error');
+                        lastFailedAction = () => callAPI(endpoint, options);
+                        showGlobalError(
+                            '无法连接到后端服务',
+                            `请求接口 ${endpoint} 失败，请确认后端服务已启动`,
+                            `后端地址: ${API_BASE}\n请求方法: ${method}\n错误详情: ${error.message}`
+                        );
+                    } else {
+                        showToast(`🌐 网络错误: ${error.message}`, 'error');
+                    }
+                } else if (error.message.includes('JSON')) {
+                    errorCategory = '数据格式错误';
+                    showToast(`📄 ${error.message}`, 'error');
+                } else if (error.message.includes('超时') || error.message.includes('Abort')) {
+                    errorCategory = '请求超时';
+                    showToast(`⏰ 请求超时，后端响应过慢`, 'error');
+                } else if (error.name === 'AbortError') {
+                    errorCategory = '请求取消';
+                    showToast('请求已取消', 'info');
+                } else if (error.message === '未授权') {
+                    // 不显示 toast，已在上面处理
+                } else {
+                    errorCategory = '请求异常';
+                    showToast(error.message || '请求失败', 'error');
+                }
+                
+                console.error(`❌ [API ${requestId}] 最终错误: [${errorCategory}] ${error.message}`);
+                throw error;
+            }
+        }
+
+
+        // ================================================================
+        // 6. Mock API 实现
+        // ================================================================
+
+        async function mockApiCall(endpoint, options = {}) {
+            await new Promise(resolve => setTimeout(resolve, 250));
+
+            const method = options.method || 'GET';
+            const body = options.body || {};
+
+            // ----- 登录 -----
+            if (endpoint === '/auth/login' && method === 'POST') {
+                const { username, password } = body;
+                const user = mockUsers.find(u => u.username === username && u.password === password);
+                if (!user) {
+                    return { code: 1001, message: '账号或密码错误' };
+                }
+                const token = 'mock_token_' + Date.now() + '_' + user.id;
+                return {
+                    code: 0,
+                    message: '登录成功',
+                    data: {
+                        token,
+                        user_id: user.id,
+                        username: user.username,
+                        name: user.name,
+                        role: user.role,
+                        is_admin: user.is_admin,
+                        max_commitment: user.max_commitment,
+                    }
+                };
+            }
+
+            // 检查登录状态（需要 token）
+            const token = getToken();
+            if (!token) {
+                return { code: 401, message: '请先登录' };
+            }
+
+            // 获取当前用户
+            const stored = getStoredUser();
+            if (!stored) {
+                return { code: 401, message: '请先登录' };
+            }
+
+            // ----- 仪表盘 -----
+            if (endpoint === '/dashboard' && method === 'GET') {
+                // Mock 模式不区分管理员账号，所有用户都是家庭成员
+                const familyUsers = [...mockUsers];
+                const totalCommitment = familyUsers.reduce((s, u) => s + u.max_commitment, 0);
+                const totalPending = mockBills.filter(b => b.status !== 'settled')
+                    .reduce((s, b) => s + (b.total_amount - getClaimedAmount(b.id)), 0);
+                const totalSettled = mockBills.filter(b => b.status === 'settled').length;
+                const urlParams = new URLSearchParams(endpoint.split('?')[1] || '');
+                const userId = parseInt(urlParams.get('user_id')) || (stored ? stored.user_id : null);
+                const me = mockUsers.find(u => u.id === userId) || familyUsers[0];
+                return {
+                    code: 0,
+                    data: {
+                        totalCommitment,
+                        totalPending,
+                        totalAvailable: totalCommitment - totalPending,
+                        totalSettled,
+                        members: familyUsers.map(u => ({
+                            ...u,
+                            used: getClaimedAmountByUser(u.id),
+                            receivable: getReceivable(u.id),
+                            payable: getPayable(u.id),
+                            remain: u.max_commitment - getClaimedAmountByUser(u.id),
+                        })),
+                        currentUser: {
+                            ...me,
+                            used: getClaimedAmountByUser(me.id),
+                            receivable: getReceivable(me.id),
+                            payable: getPayable(me.id),
+                            remain: me.max_commitment - getClaimedAmountByUser(me.id),
+                        }
+                    }
+                };
+            }
+
+            // ----- 账单列表 -----
+            if (endpoint.match(/^\/bills(\?.*)?$/) && method === 'GET') {
+                const status = endpoint.includes('status=') ? endpoint.split('status=')[1].split('&')[0] : null;
+                let filtered = mockBills;
+                if (status && status !== 'all') {
+                    filtered = mockBills.filter(b => b.status === status);
+                }
+                return {
+                    code: 0,
+                    data: filtered.map(b => ({
+                        ...b,
+                        claimed_amount: getClaimedAmount(b.id),
+                        remaining: b.total_amount - getClaimedAmount(b.id),
+                        purchaser_name: getUserName(b.purchaser_id),
+                    }))
+                };
+            }
+
+            // ----- 账单详情 -----
+            if (endpoint.match(/^\/bills\/\d+$/) && method === 'GET') {
+                const id = parseInt(endpoint.split('/')[2]);
+                const bill = mockBills.find(b => b.id === id);
+                if (!bill) return { code: 404, message: '账单不存在' };
+                const billClaims = getClaimsByBill(id).map(c => ({
+                    ...c,
+                    claimant_name: getUserName(c.claimant_id),
+                    status_text: getClaimStatusText(c),
+                    status_class: getClaimStatusClass(c),
+                }));
+                return {
+                    code: 0,
+                    data: {
+                        ...bill,
+                        claimed_amount: getClaimedAmount(id),
+                        remaining: bill.total_amount - getClaimedAmount(id),
+                        purchaser_name: getUserName(bill.purchaser_id),
+                        claims: billClaims,
+                    }
+                };
+            }
+
+            // ----- 创建账单 -----
+            if (endpoint === '/bills' && method === 'POST') {
+                const newBill = {
+                    id: mockBills.length + 1,
+                    title: body.title,
+                    total_amount: parseFloat(body.total_amount),
+                    purchaser_id: body.purchaser_id,
+                    status: 'pending',
+                    created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+                    settled_at: null,
+                };
+                mockBills.push(newBill);
+                return { code: 0, message: '账单创建成功', data: newBill };
+            }
+
+            // ----- 认领报销 -----
+            if (endpoint === '/claims' && method === 'POST') {
+                const { bill_id, claimant_id, amount } = body;
+                const bill = mockBills.find(b => b.id === bill_id);
+                if (!bill) return { code: 404, message: '账单不存在' };
+                const claimed = getClaimedAmount(bill_id);
+                if (claimed + amount > bill.total_amount) {
+                    return { code: 1001, message: `认领失败：该账单剩余额度不足（剩余 ${bill.total_amount - claimed} 元）` };
+                }
+                const userUsed = getClaimedAmountByUser(claimant_id);
+                const user = mockUsers.find(u => u.id === claimant_id);
+                if (!user) return { code: 404, message: '用户不存在' };
+                if (userUsed + amount > user.max_commitment) {
+                    return { code: 1002, message: `认领失败：您的剩余额度不足（剩余 ${user.max_commitment - userUsed} 元）` };
+                }
+                const newClaim = {
+                    id: mockClaims.length + 1,
+                    bill_id,
+                    claimant_id,
+                    amount: parseFloat(amount),
+                    payer_confirmed: false,
+                    receiver_confirmed: false,
+                    status: 'pending',
+                    created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+                    settled_at: null,
+                };
+                mockClaims.push(newClaim);
+                const totalClaimed = getClaimedAmount(bill_id);
+                if (totalClaimed >= bill.total_amount) {
+                    bill.status = 'transferring';
+                } else {
+                    bill.status = 'claiming';
+                }
+                return { code: 0, message: '认领成功', data: { bill_status: bill.status, remaining: bill.total_amount -
+                            totalClaimed } };
+            }
+
+            // ----- 查账结算 -----
+            if (endpoint.match(/^\/settlement\/\d+$/) && method === 'GET') {
+                const userId = parseInt(endpoint.split('/')[2]);
+                const payable = [];
+                const receivable = [];
+                mockClaims.filter(c => c.status === 'pending').forEach(c => {
+                    const bill = mockBills.find(b => b.id === c.bill_id);
+                    if (!bill) return;
+                    if (c.claimant_id === userId) {
+                        payable.push({
+                            claim_id: c.id,
+                            bill_id: bill.id,
+                            bill_title: bill.title,
+                            receiver_name: getUserName(bill.purchaser_id),
+                            amount: c.amount,
+                            payer_confirmed: c.payer_confirmed,
+                            receiver_confirmed: c.receiver_confirmed,
+                        });
+                    }
+                    if (bill.purchaser_id === userId) {
+                        receivable.push({
+                            claim_id: c.id,
+                            bill_id: bill.id,
+                            bill_title: bill.title,
+                            payer_name: getUserName(c.claimant_id),
+                            amount: c.amount,
+                            payer_confirmed: c.payer_confirmed,
+                            receiver_confirmed: c.receiver_confirmed,
+                        });
+                    }
+                });
+                return {
+                    code: 0,
+                    data: {
+                        payable,
+                        receivable,
+                        total_payable: payable.reduce((s, i) => s + i.amount, 0),
+                        total_receivable: receivable.reduce((s, i) => s + i.amount, 0),
+                    }
+                };
+            }
+
+            // ----- 付款方确认 -----
+            if (endpoint.match(/^\/claims\/\d+\/confirm-payer$/) && method === 'PUT') {
+                const id = parseInt(endpoint.split('/')[2]);
+                const claim = mockClaims.find(c => c.id === id);
+                if (!claim) return { code: 404, message: '认领记录不存在' };
+                claim.payer_confirmed = true;
+                if (claim.receiver_confirmed) {
+                    claim.status = 'settled';
+                    claim.settled_at = new Date().toISOString().replace('T', ' ').slice(0, 19);
+                    const bill = mockBills.find(b => b.id === claim.bill_id);
+                    if (bill) {
+                        const allClaims = getClaimsByBill(bill.id);
+                        if (allClaims.every(c => c.status === 'settled')) {
+                            bill.status = 'settled';
+                            bill.settled_at = claim.settled_at;
+                        }
+                    }
+                }
+                return { code: 0, message: '已确认转账' };
+            }
+
+            // ----- 收款方确认 -----
+            if (endpoint.match(/^\/claims\/\d+\/confirm-receiver$/) && method === 'PUT') {
+                const id = parseInt(endpoint.split('/')[2]);
+                const claim = mockClaims.find(c => c.id === id);
+                if (!claim) return { code: 404, message: '认领记录不存在' };
+                claim.receiver_confirmed = true;
+                if (claim.payer_confirmed) {
+                    claim.status = 'settled';
+                    claim.settled_at = new Date().toISOString().replace('T', ' ').slice(0, 19);
+                    const bill = mockBills.find(b => b.id === claim.bill_id);
+                    if (bill) {
+                        const allClaims = getClaimsByBill(bill.id);
+                        if (allClaims.every(c => c.status === 'settled')) {
+                            bill.status = 'settled';
+                            bill.settled_at = claim.settled_at;
+                        }
+                    }
+                }
+                return { code: 0, message: '已确认收款' };
+            }
+
+            // ----- 激励榜 -----
+            if (endpoint === '/ranking' && method === 'GET') {
+                return {
+                    code: 0,
+                    data: {
+                        medals: mockMedals.map(m => ({ ...m, name: getUserName(m.user_id) })),
+                        shoppers: mockShopperRank.map(s => ({ ...s, name: getUserName(s.user_id) })),
+                    }
+                };
+            }
+
+            return { code: 404, message: `接口未找到: ${endpoint}` };
+        }
+
+
+        // ================================================================
+        // 7. 登录 / 登出
+        // ================================================================
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!username || !password) {
+                showToast('请输入账号和密码', 'error');
+                return;
+            }
+
+            console.log(`🔐 [登录] 尝试登录: ${username}`);
+
+            try {
+                const response = await callAPI('/auth/login', {
+                    method: 'POST',
+                    body: { username, password }
+                });
+
+                // 检查登录是否成功
+                if (response.code !== 0) {
+                    console.error(`❌ [登录] 登录失败: ${response.message}`);
+                    showToast(response.message || '登录失败', 'error');
+                    return;
+                }
+
+                if (!response.data) {
+                    console.error(`❌ [登录] 登录响应缺少 data:`, response);
+                    showToast('登录响应数据异常', 'error');
+                    return;
+                }
+
+                const { token, user_id, name, role, is_admin, max_commitment } = response.data;
+
+                if (!token || !user_id) {
+                    console.error(`❌ [登录] 登录响应缺少 token 或 user_id:`, response);
+                    showToast('登录响应数据异常', 'error');
+                    return;
+                }
+
+                // 保存登录状态
+                saveAuth(token, { user_id, username, name, role, is_admin, max_commitment });
+                currentUser = { id: user_id, name, role, is_admin };
+
+                console.log(`✅ [登录] 用户 ${name} (ID:${user_id}) 登录成功, 角色: ${getRoleDisplay(role)}`);
+
+                // 显示主界面
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+
+                // 更新导航用户信息
+                document.getElementById('navbarUser').innerHTML =
+                    `👤 ${name} <span class="role-badge">${getRoleDisplay(role)}</span>`;
+                document.getElementById('myIdBadge').textContent = `用户 ID: ${user_id}`;
+
+                showToast(`🎉 欢迎回来，${name}！`, 'success');
+
+                // 加载数据
+                renderAll();
+
+            } catch (error) {
+                console.error(`❌ [登录] 用户 ${username} 登录失败:`, error.message);
+                // 错误已由 callAPI showToast 提示
+            }
+        }
+
+        function handleLogout() {
+            clearAuth();
+            currentUser = null;
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('loginPassword').value = '';
+            showToast('已退出登录', 'info');
+        }
+
+        // 回车登录
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+        document.getElementById('loginUsername').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // 检查是否已登录
+        function checkAuth() {
+            const token = getToken();
+            const user = getStoredUser();
+            if (token && user) {
+                currentUser = { id: user.user_id, name: user.name, role: user.role, is_admin: user.is_admin };
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+                document.getElementById('navbarUser').innerHTML =
+                    `👤 ${user.name} <span class="role-badge">${getRoleDisplay(user.role)}</span>`;
+                document.getElementById('myIdBadge').textContent = `用户 ID: ${user.user_id}`;
+                renderAll();
+                return true;
+            }
+            return false;
+        }
+
+
+        // ================================================================
+        // 8. 页面渲染函数
+        // ================================================================
+
+        async function renderDashboard() {
+            try {
+                const resp = await callAPI('/dashboard?user_id=' + currentUser.id);
+                const data = resp.data;
+
+                document.getElementById('statTotalCommitment').textContent = data.totalCommitment.toFixed(0);
+                document.getElementById('statTotalPending').textContent = data.totalPending.toFixed(0);
+                document.getElementById('statTotalAvailable').textContent = data.totalAvailable.toFixed(0);
+                document.getElementById('statTotalSettled').textContent = data.totalSettled;
+
+                const grid = document.getElementById('memberPoolGrid');
+                grid.innerHTML = data.members.map(m => {
+                    const remain = m.max_commitment - m.used;
+                    const pct = m.max_commitment > 0 ? (m.used / m.max_commitment * 100) : 0;
+                    const danger = pct > 80 ? 'danger' : '';
+                    return `
+                        <div class="member-pool-card">
+                            <div class="member-name">${m.name}</div>
+                            <div class="member-amount">${m.max_commitment.toFixed(0)} 元</div>
+                            <div class="member-detail">
+                                已认领 <span class="used">${m.used.toFixed(0)}</span> 元
+                                · 剩余 <span class="remain">${remain.toFixed(0)}</span> 元
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill ${danger}" style="width:${Math.min(pct, 100)}%;"></div>
+                            </div>
+                            <div style="font-size:12px;color:#aaa;margin-top:4px;">
+                                应收 ${m.receivable.toFixed(0)} · 应付 ${m.payable.toFixed(0)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                const me = data.currentUser;
+                document.getElementById('myCommitment').textContent = me.max_commitment.toFixed(0);
+                document.getElementById('myUsed').textContent = me.used.toFixed(0);
+                document.getElementById('myRemain').textContent = (me.max_commitment - me.used).toFixed(0);
+                document.getElementById('myReceivable').textContent = me.receivable.toFixed(0);
+                document.getElementById('myPayable').textContent = me.payable.toFixed(0);
+
+            } catch (e) {
+                console.error(`❌ [仪表盘渲染] 加载仪表盘数据失败:`, e);
+            }
+        }
+
+        // 更新购买人下拉框
+        function updatePurchaserSelect() {
+            const sel = document.getElementById('billPurchaser');
+            sel.innerHTML = mockUsers.map(u =>
+                `<option value="${u.id}" ${u.id === currentUser?.id ? 'selected' : ''}>${u.name} (${getRoleDisplay(u.role)})</option>`
+            ).join('');
+        }
+
+        async function renderBills() {
+            try {
+                const resp = await callAPI('/bills');
+                const billsData = resp.data;
+                const container = document.getElementById('billList');
+
+                if (billsData.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><span class="emoji">📭</span>暂无账单，创建一个吧！</div>`;
+                    return;
+                }
+
+                container.innerHTML = billsData.map(b => {
+                    const statusText = getBillStatusText(b.status);
+                    const badgeClass = getBillStatusBadge(b.status);
+                    const isSettled = b.status === 'settled';
+                    return `
+                        <div class="card" style="${isSettled ? 'opacity:0.6;' : ''}">
+                            <div class="card-header">
+                                <span class="card-title">${b.title}</span>
+                                <span class="card-badge ${badgeClass}">${statusText}</span>
+                            </div>
+                            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;">
+                                <div>
+                                    <div>购买人：${b.purchaser_name}</div>
+                                    <div style="font-size:12px;color:#888;">${b.created_at}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:700;font-size:17px;">${b.total_amount.toFixed(0)} 元</div>
+                                    <div style="font-size:12px;color:#888;">
+                                        已认领 ${b.claimed_amount.toFixed(0)} · 剩余 ${b.remaining.toFixed(0)}
+                                    </div>
+                                </div>
+                            </div>
+                            ${!isSettled ? `
+                            <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+                                <button class="btn btn-primary btn-sm" onclick="viewBillDetail(${b.id})">查看详情</button>
+                                <button class="btn btn-success btn-sm" onclick="showClaimModal(${b.id})">✋ 认领报销</button>
+                            </div>
+                            ` : `
+                            <div style="margin-top:6px;font-size:13px;color:#2e7d32;">✅ 已于 ${b.settled_at || '未知时间'} 结清</div>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error(`❌ [账单列表渲染] 加载账单数据失败:`, e);
+            }
+        }
+
+        async function viewBillDetail(billId) {
+            try {
+                const resp = await callAPI(`/bills/${billId}`);
+                const b = resp.data;
+                const claimsHtml = b.claims.length === 0 ?
+                    '<div style="color:#aaa;padding:8px 0;">暂无认领记录</div>' :
+                    b.claims.map(c => `
+                        <div class="claim-item">
+                            <span>${c.claimant_name} 认领 <strong>${c.amount.toFixed(0)}</strong> 元</span>
+                            <span class="claim-status ${c.status_class}">${c.status_text}</span>
+                        </div>
+                    `).join('');
+
+                openModal(
+                    `📄 ${b.title}`,
+                    `
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div><strong>购买人</strong><br/>${b.purchaser_name}</div>
+                            <div><strong>总金额</strong><br/><span style="font-size:19px;font-weight:700;">${b.total_amount.toFixed(0)} 元</span></div>
+                            <div><strong>已认领</strong><br/>${b.claimed_amount.toFixed(0)} 元</div>
+                            <div><strong>剩余</strong><br/><span style="color:${b.remaining > 0 ? '#e67e22' : '#2ecc71'};font-weight:700;">${b.remaining.toFixed(0)} 元</span></div>
+                        </div>
+                        <div style="border-top:1px solid #eee;padding-top:10px;margin-top:4px;">
+                            <strong>认领记录</strong>
+                            ${claimsHtml}
+                        </div>
+                        ${b.status !== 'settled' ? `
+                        <div style="margin-top:10px;">
+                            <button class="btn btn-success btn-sm" onclick="closeModal();showClaimModal(${b.id});">✋ 我也来认领</button>
+                        </div>
+                        ` : ''}
+                    `,
+                    '关闭'
+                );
+            } catch (e) {
+                console.error(`❌ [账单详情] 查看账单详情失败:`, e);
+                showToast('加载账单详情失败', 'error');
+            }
+        }
+
+        function showClaimModal(billId) {
+            const userOptions = mockUsers.map(u =>
+                `<option value="${u.id}" ${u.id === currentUser?.id ? 'selected' : ''}>${u.name} (${getRoleDisplay(u.role)})</option>`
+            ).join('');
+
+            openModal(
+                '✋ 认领报销',
+                `
+                    <div class="form-group">
+                        <label>认领金额（元）</label>
+                        <input type="number" id="claimAmount" placeholder="0.00" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label>认领人</label>
+                        <select id="claimantSelect">${userOptions}</select>
+                    </div>
+                    <div style="font-size:12px;color:#888;margin-top:6px;">💡 认领后将立即检查您的剩余额度</div>
+                `,
+                '确认认领',
+                async () => {
+                    const amount = parseFloat(document.getElementById('claimAmount').value);
+                    const claimantId = parseInt(document.getElementById('claimantSelect').value);
+                    if (!amount || amount <= 0) {
+                        showToast('请输入有效的认领金额', 'error');
+                        return;
+                    }
+                    try {
+                        await callAPI('/claims', {
+                            method: 'POST',
+                            body: { bill_id: billId, claimant_id: claimantId, amount }
+                        });
+                        showToast('🎉 认领成功！', 'success');
+                        renderAll();
+                    } catch (e) {
+                        console.error(`❌ [认领提交] 认领账单 ${billId} 失败:`, e);
+                    }
+                }
+            );
+        }
+
+        async function renderSettlement() {
+            try {
+                const userId = getStoredUser()?.user_id || currentUser?.id;
+                if (!userId) return;
+                const resp = await callAPI(`/settlement/${userId}`);
+                const data = resp.data;
+                const container = document.getElementById('settlementContent');
+
+                let html = '';
+
+                html += `<div class="settlement-group">
+                    <h4>💸 我应付款（共 ${data.payable.length} 笔，合计 <span style="color:#e74c3c;">${data.total_payable.toFixed(0)}</span> 元）</h4>`;
+                if (data.payable.length === 0) {
+                    html += `<div style="color:#aaa;padding:6px 0;">✅ 暂无应付款</div>`;
+                } else {
+                    data.payable.forEach(item => {
+                        const confirmed = item.payer_confirmed ? '✅ 已确认' :
+                            `<button class="btn btn-success btn-sm" onclick="confirmPayer(${item.claim_id})">我已转账</button>`;
+                        html += `
+                            <div class="settlement-item">
+                                <span>转给 <strong>${item.receiver_name}</strong> · ${item.bill_title}</span>
+                                <span>
+                                    <span class="amount pay">${item.amount.toFixed(0)} 元</span>
+                                    <span style="margin-left:10px;">${confirmed}</span>
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div>`;
+
+                html += `<div class="settlement-group">
+                    <h4>💰 我应收款（共 ${data.receivable.length} 笔，合计 <span style="color:#2ecc71;">${data.total_receivable.toFixed(0)}</span> 元）</h4>`;
+                if (data.receivable.length === 0) {
+                    html += `<div style="color:#aaa;padding:6px 0;">✅ 暂无应收款</div>`;
+                } else {
+                    data.receivable.forEach(item => {
+                        const confirmed = item.receiver_confirmed ? '✅ 已确认' :
+                            `<button class="btn btn-primary btn-sm" onclick="confirmReceiver(${item.claim_id})">我已收到</button>`;
+                        html += `
+                            <div class="settlement-item">
+                                <span><strong>${item.payer_name}</strong> 应付 · ${item.bill_title}</span>
+                                <span>
+                                    <span class="amount receive">${item.amount.toFixed(0)} 元</span>
+                                    <span style="margin-left:10px;">${confirmed}</span>
+                                </span>
+                            </div>
+                        `;
+                    });
+                }
+                html += `</div>`;
+
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error(`❌ [结算渲染] 加载结算数据失败:`, e);
+                container.innerHTML = `<div class="empty-state"><span class="emoji">😵</span>结算数据加载失败</div>`;
+            }
+        }
+
+        async function confirmPayer(claimId) {
+            try {
+                await callAPI(`/claims/${claimId}/confirm-payer`, { method: 'PUT' });
+                showToast('✅ 已确认转账', 'success');
+                renderAll();
+            } catch (e) {
+                console.error(`❌ [确认转账] 认领 ${claimId} 确认转出失败:`, e);
+            }
+        }
+
+        async function confirmReceiver(claimId) {
+            try {
+                await callAPI(`/claims/${claimId}/confirm-receiver`, { method: 'PUT' });
+                showToast('✅ 已确认收款', 'success');
+                renderAll();
+            } catch (e) {
+                console.error(`❌ [确认收款] 认领 ${claimId} 确认收款失败:`, e);
+            }
+        }
+
+        async function createBill() {
+            const title = document.getElementById('billTitle').value.trim();
+            const amount = parseFloat(document.getElementById('billAmount').value);
+            const purchaserId = parseInt(document.getElementById('billPurchaser').value);
+
+            if (!title) { showToast('请输入账单名称', 'error'); return; }
+            if (!amount || amount <= 0) { showToast('请输入有效的金额', 'error'); return; }
+
+            try {
+                await callAPI('/bills', {
+                    method: 'POST',
+                    body: { title, total_amount: amount, purchaser_id: purchaserId }
+                });
+                showToast('📤 账单创建成功！', 'success');
+                document.getElementById('billTitle').value = '';
+                document.getElementById('billAmount').value = '';
+                renderAll();
+            } catch (e) {
+                console.error(`❌ [创建账单] 创建账单失败:`, e);
+            }
+        }
+
+        async function renderRanking() {
+            try {
+                const resp = await callAPI('/ranking');
+                const data = resp.data;
+
+                document.getElementById('medalRank').innerHTML = data.medals.map(m => `
+                    <div class="rank-card">
+                        <div class="rank-emoji">⚡</div>
+                        <div class="rank-name">${m.name}</div>
+                        <div class="rank-number">${m.count}</div>
+                        <div class="rank-badge">枚闪电勋章</div>
+                    </div>
+                `).join('') || `<div class="empty-state"><span class="emoji">🏅</span>暂无勋章数据</div>`;
+
+                document.getElementById('shopperRank').innerHTML = data.shoppers.map((s, idx) => `
+                    <div class="rank-card">
+                        <div class="rank-emoji">${['🥇','🥈','🥉'][idx] || '🏅'}</div>
+                        <div class="rank-name">${s.name}</div>
+                        <div class="rank-number">${s.count}</div>
+                        <div class="rank-badge">笔账单</div>
+                    </div>
+                `).join('') || `<div class="empty-state"><span class="emoji">🛒</span>暂无采购数据</div>`;
+
+            } catch (e) {
+                console.error(`❌ [排行榜渲染] 加载排行榜数据失败:`, e);
+            }
+        }
+
+
+        // ================================================================
+        // 9. 导航切换 + 全局渲染
+        // ================================================================
+
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const pageName = this.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(`page-${pageName}`).classList.add('active');
+                switch (pageName) {
+                    case 'dashboard':
+                        renderDashboard();
+                        break;
+                    case 'bills':
+                        renderBills();
+                        break;
+                    case 'settlement':
+                        renderSettlement();
+                        break;
+                    case 'ranking':
+                        renderRanking();
+                        break;
+                }
+            });
+        });
+
+        async function renderAll() {
+            const activeTab = document.querySelector('.nav-tab.active');
+            const pageName = activeTab ? activeTab.dataset.page : 'dashboard';
+            switch (pageName) {
+                case 'dashboard':
+                    await renderDashboard();
+                    break;
+                case 'bills':
+                    await renderBills();
+                    break;
+                case 'settlement':
+                    await renderSettlement();
+                    break;
+                case 'ranking':
+                    await renderRanking();
+                    break;
+            }
+        }
+
+
+        // ================================================================
+        // 10. 初始化
+        // ================================================================
+
+        updatePurchaserSelect();
+
+        // 检查登录状态
+        const loggedIn = checkAuth();
+
+        if (!loggedIn) {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+        }
+
+        if (USE_MOCK) {
+            console.log('📦 Mock 模式已启用（USE_MOCK = true）');
+            console.log('🔑 演示账号: aaa/123456, son/123456, daughter/123456');
+        } else {
+            console.log(`🔗 对接后端: ${API_BASE}`);
+            // 启动时检测后端连接
+            (async function checkStartupConnection() {
+                try {
+                    console.log(`🔍 [启动检测] 正在检测后端连接: ${API_BASE}/ping`);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    const resp = await fetch(`${API_BASE}/ping`, {
+                        method: 'GET',
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    if (resp.ok) {
+                        console.log(`✅ [启动检测] 后端连接正常 (${API_BASE})`);
+                    } else {
+                        console.warn(`⚠️ [启动检测] 后端返回异常状态: ${resp.status}`);
+                        showToast(`⚠️ 后端服务状态异常 (${resp.status})`, 'warning');
+                    }
+                } catch (err) {
+                    console.error(`❌ [启动检测] 无法连接到后端: ${API_BASE}`);
+                    console.error(`❌ [启动检测] 请确认后端已启动: cd backend && python app.py`);
+                    console.error(`❌ [启动检测] 错误详情:`, err.message);
+                    showGlobalError(
+                        '⚠️ 无法连接到后端服务',
+                        `请确认后端服务器已启动（${API_BASE}）`,
+                        '启动命令: cd backend && python app.py\n\n' +
+                        `错误: ${err.name === 'AbortError' ? '连接超时（5秒）' : err.message}\n\n` +
+                        '提示: 如果尚未启动后端，请在终端运行上述命令。'
+                    );
+                }
+            })();
+        }
+
+        // 暴露全局函数
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        window.createBill = createBill;
+        window.viewBillDetail = viewBillDetail;
+        window.showClaimModal = showClaimModal;
+        window.confirmPayer = confirmPayer;
+        window.confirmReceiver = confirmReceiver;
+        window.closeModal = closeModal;
+        window.modalConfirm = modalConfirm;
+        window.renderAll = renderAll;
+    </script>
+
+</body>
+</html>
