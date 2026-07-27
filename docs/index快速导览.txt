@@ -7,6 +7,7 @@
 > - **仪表盘接口**：`GET /api/dashboard?user_id={id}` 需传当前用户ID
 > - **备份系统**：支持创建、恢复、删除全量数据备份
 > - **账单管理**：管理员可直接在后台编辑/删除账单及认领记录
+> - **承诺上限自服务**：普通用户可在仪表盘自行调高承诺上限（✏️ 按钮），无需管理员操作
 
 > **注意**：行号可能会因你使用的编辑器（如 VS Code、记事本等）和换行方式（Windows/LF）略有差异，但大致位置相同。建议用编辑器打开后，搜索关键词定位更准确。
 
@@ -61,6 +62,10 @@
 | 成员基金池 | `id="memberPoolGrid"` | **第 814 行** | 展示所有成员 |
 | 我的速览 | `id="myCommitment"` | **第 822 行** | 当前用户信息 |
 | 仪表盘渲染函数 | `async function renderDashboard()` | **第 1667 行** | 加载并渲染数据 |
+| 修改承诺上限弹窗 | `id="editCommitmentOverlay"` | **第 793 行** | 修改上限的弹窗结构 |
+| 打开修改弹窗 | `async function showEditCommitment()` | **第 1940 行** | 从API获取数据并显示弹窗 |
+| 关闭弹窗 | `function closeEditCommitment()` | **第 1982 行** | 隐藏弹窗 |
+| 确认修改 | `async function confirmEditCommitment()` | **第 1988 行** | 校验并提交新上限 |
 
 ### 4.2 账单管理
 
@@ -156,6 +161,8 @@
 > - `aaa`（妈妈，额度300）
 > - `son`（儿子，额度100）
 > - `daughter`（女儿，额度80）
+>
+> **承诺上限**：普通用户可在仪表盘点击 ✏️ 自行调高上限，仅可升不可降；管理员无此功能
 
 ---
 
@@ -170,6 +177,9 @@
 | 修改登录页欢迎语 | `家庭报销管家` | 741 |
 | 修改导航栏品牌名 | `navbar-brand` | 765 |
 | 修改仪表盘统计 | `stat-label` | 800 |
+| 承诺上限编辑弹窗（HTML） | `editCommitmentOverlay` | 793 |
+| 承诺上限编辑函数 | `showEditCommitment` | 1940 |
+| 提交修改函数 | `confirmEditCommitment` | 1988 |
 | 修改激励榜规则 | `mockMedals` / `mockShopperRank` | 1021 |
 | 修改 Toast 提示颜色 | `.toast.success` | 240-250 |
 | 修改主色调 | `#4a6cf7` | 全局搜索 |
