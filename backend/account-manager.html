@@ -19,6 +19,8 @@
         .btn-warning:hover { background: #d97706; }
         .btn-success { background: #2ecc71; color: #fff; }
         .btn-success:hover { background: #27ae60; }
+        .btn-outline { background: #fff; color: #666; border: 1px solid #d0d5dd; }
+        .btn-outline:hover { background: #f5f5f5; }
         .btn-sm { padding: 4px 12px; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; }
         th { text-align: left; padding: 10px 12px; background: #f0f2f5; font-weight: 600; }
@@ -29,7 +31,7 @@
         .form-group input, .form-group select { width: 100%; padding: 7px 10px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 13px; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #4a6cf7; }
         .badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 999; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 10001; }
         .modal.open { display: flex; }
         .modal-box { background: #fff; border-radius: 16px; padding: 28px 32px; max-width: 420px; width: 90%; }
         .modal-box h3 { margin-bottom: 16px; }
@@ -45,55 +47,132 @@
         .back-link { color: #4a6cf7; text-decoration: none; font-size: 14px; }
         .back-link:hover { text-decoration: underline; }
 
-        /* ===== 登录屏障样式 ===== */
-        .login-overlay {
+        /* ===== 登录/设置 屏障样式 ===== */
+        .overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex; justify-content: center; align-items: center;
             z-index: 10000;
         }
-        .login-overlay.hidden { display: none; }
-        .login-card {
+        .overlay.hidden { display: none; }
+        .overlay-card {
             background: #fff; border-radius: 20px; padding: 40px 36px;
-            max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
         }
-        .login-card .logo { font-size: 48px; margin-bottom: 8px; }
-        .login-card h2 { font-size: 22px; color: #1a1a2e; margin-bottom: 4px; }
-        .login-card .login-subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
-        .login-card .form-group { text-align: left; margin-bottom: 16px; }
-        .login-card .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
-        .login-card .form-group input {
+        .overlay-card .logo { font-size: 48px; margin-bottom: 8px; }
+        .overlay-card h2 { font-size: 22px; color: #1a1a2e; margin-bottom: 4px; }
+        .overlay-card .overlay-subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+        .overlay-card .form-group { text-align: left; margin-bottom: 16px; }
+        .overlay-card .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+        .overlay-card .form-group input {
             width: 100%; padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 10px;
             font-size: 15px; transition: border-color 0.2s; outline: none;
         }
-        .login-card .form-group input:focus { border-color: #667eea; }
-        .login-card .btn-login {
+        .overlay-card .form-group input:focus { border-color: #667eea; }
+        .overlay-card .btn-primary {
             width: 100%; padding: 12px; border: none; border-radius: 10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
         }
-        .login-card .btn-login:hover { opacity: 0.9; }
-        .login-card .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-        .login-card .login-error { color: #e74c3c; font-size: 13px; margin-top: 12px; min-height: 20px; }
-        .login-card .login-hint { color: #aaa; font-size: 12px; margin-top: 16px; }
+        .overlay-card .btn-primary:hover { opacity: 0.9; }
+        .overlay-card .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .overlay-card .error-msg { color: #e74c3c; font-size: 13px; margin-top: 12px; min-height: 20px; }
+        .overlay-card .hint-text { color: #aaa; font-size: 12px; margin-top: 16px; }
+
+        /* ===== 登录页底部的恢复出厂设置链接 ===== */
+        .factory-reset-link {
+            display: block; color: #ccc; font-size: 11px; margin-top: 20px;
+            text-decoration: none; cursor: pointer; transition: color 0.2s;
+        }
+        .factory-reset-link:hover { color: #e74c3c; text-decoration: underline; }
+
+        /* ===== 管理界面 ===== */
         .admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .btn-logout {
             padding: 6px 16px; border: 1px solid #e0e0e0; border-radius: 8px;
             background: #fff; color: #666; font-size: 13px; cursor: pointer; transition: all 0.2s;
         }
         .btn-logout:hover { background: #f5f5f5; color: #e74c3c; border-color: #e74c3c; }
+        .btn-console {
+            padding: 6px 14px; border: 1px solid #2a2f3a; border-radius: 8px;
+            background: #0d1117; color: #7ab0df; font-size: 13px; cursor: pointer;
+            transition: all 0.2s; font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+        .btn-console:hover { background: #1a2d3d; border-color: #7ab0df; color: #e6c384; }
         .management-area { display: none; }
         .management-area.visible { display: block; }
+
+        /* ===== 备份区域样式 ===== */
+        .backup-list { max-height: 200px; overflow-y: auto; margin-top: 8px; }
+        .backup-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .backup-item:hover { background: #f8f9fc; }
+        .backup-item .backup-time { color: #666; }
+
+        /* ===== 账单管理样式 ===== */
+        .bill-card {
+            border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 16px;
+            margin-bottom: 8px; font-size: 13px; transition: all 0.2s;
+        }
+        .bill-card:hover { border-color: #c0c0c0; background: #fafbfc; }
+        .bill-card .bill-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px; cursor: pointer;
+        }
+        .bill-card .bill-title { font-weight: 600; font-size: 14px; }
+        .bill-card .bill-meta { display: flex; gap: 16px; flex-wrap: wrap; color: #666; font-size: 12px; }
+        .bill-card .bill-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .bill-card .status-badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-claiming { background: #dbeafe; color: #1e40af; }
+        .status-transferring { background: #e0e7ff; color: #3730a3; }
+        .status-settled { background: #d1fae5; color: #065f46; }
+        .claims-subtable {
+            margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ddd;
+            display: none; font-size: 12px;
+        }
+        .claims-subtable.open { display: block; }
+        .claims-subtable table { font-size: 12px; margin-top: 4px; }
+        .claims-subtable td, .claims-subtable th { padding: 4px 8px; }
+        .toggle-claims { color: #4a6cf7; cursor: pointer; font-size: 12px; }
+        .toggle-claims:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
+    <!-- ===== 首次设置屏障 ===== -->
+    <div class="overlay" id="setupOverlay">
+        <div class="overlay-card">
+            <div class="logo">🛡️</div>
+            <h2>首次管理设置</h2>
+            <div class="overlay-subtitle">检测到您首次打开后台管理，请设置管理员账号和密码</div>
+            <div class="form-group">
+                <label>管理员账号</label>
+                <input type="text" id="setupUsername" placeholder="请输入管理员账号" autocomplete="off" />
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="setupPassword" placeholder="请输入密码（至少4位）" />
+            </div>
+            <div class="form-group">
+                <label>确认密码</label>
+                <input type="password" id="setupConfirm" placeholder="请再次输入密码" />
+            </div>
+            <button class="btn-primary" id="setupBtn" onclick="handleAdminSetup()">确认设置</button>
+            <div class="error-msg" id="setupError"></div>
+            <div class="hint-text">💡 请牢记您设置的账号和密码，今后只能通过此账号登录后台</div>
+        </div>
+    </div>
+
     <!-- ===== 登录屏障 ===== -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-card">
+    <div class="overlay hidden" id="loginOverlay">
+        <div class="overlay-card">
             <div class="logo">🔐</div>
             <h2>管理员验证</h2>
-            <div class="login-subtitle">请输入管理员账号和密码以继续</div>
+            <div class="overlay-subtitle" id="loginSubtitle">请输入管理员账号和密码以继续</div>
             <div class="form-group">
                 <label>管理员账号</label>
                 <input type="text" id="loginUsername" placeholder="请输入管理员账号" />
@@ -102,9 +181,10 @@
                 <label>密码</label>
                 <input type="password" id="loginPassword" placeholder="请输入密码" />
             </div>
-            <button class="btn-login" id="loginBtn" onclick="handleAdminLogin()">验证身份</button>
-            <div class="login-error" id="loginError"></div>
-            <div class="login-hint">💡 仅管理员有权访问账号管理后台</div>
+            <button class="btn-primary" id="loginBtn" onclick="handleAdminLogin()">验证身份</button>
+            <div class="error-msg" id="loginError"></div>
+            <div class="hint-text">💡 仅管理员有权访问账号管理后台</div>
+            <a class="factory-reset-link" onclick="confirmFactoryResetOnLogin()">⚙️ 恢复出厂设置</a>
         </div>
     </div>
 
@@ -116,8 +196,9 @@
                 <h1>👤 账号管理</h1>
                 <div class="subtitle">添加、修改或删除家庭成员账号</div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
                 <span id="adminInfo" style="font-size:13px;color:#888;"></span>
+                <button class="btn-console" onclick="window.open('/admin/console','_blank')" title="查看服务器实时日志">🖥️ 控制台</button>
                 <button class="btn-logout" onclick="handleAdminLogout()">退出登录</button>
                 <a href="/" class="back-link">← 返回首页</a>
             </div>
@@ -159,25 +240,56 @@
             </div>
         </div>
 
-        <!-- 重置账单数据 -->
-        <div style="background:#fff5f5;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #fecaca;">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <!-- 备份与恢复 -->
+        <div style="background:#f0fdf4;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #bbf7d0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
                 <div>
-                    <h3 style="font-size:14px;color:#dc2626;">⚠️ 危险操作</h3>
-                    <div style="font-size:12px;color:#888;">清空所有账单和认领记录，此操作不可撤销！</div>
+                    <h3 style="font-size:14px;color:#16a34a;">💾 数据备份与恢复</h3>
+                    <div style="font-size:12px;color:#888;">创建全量数据备份，或从历史备份中恢复</div>
                 </div>
-                <button class="btn btn-danger" onclick="confirmResetBills()">🗑️ 重置全部账单</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-success" onclick="createBackup()">📦 创建备份</button>
+                    <button class="btn btn-outline" onclick="loadBackups()">🔄 刷新列表</button>
+                </div>
+            </div>
+            <div id="backupListContainer">
+                <div class="backup-list" id="backupList">
+                    <div class="empty" style="padding:12px 0;">点击「刷新列表」查看已有备份</div>
+                </div>
             </div>
         </div>
 
-        <!-- 清除排行数据 -->
-        <div style="background:#fff8e1;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #ffe082;">
+        <!-- 账单管理 -->
+        <div style="background:#eff6ff;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #bfdbfe;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px;">
+                <div>
+                    <h3 style="font-size:14px;color:#1d4ed8;">📋 账单管理</h3>
+                    <div style="font-size:12px;color:#888;">查看、编辑或删除账单及认领记录</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="toggleBillSection()">📋 查看账单</button>
+                    <button class="btn btn-outline" onclick="loadBills()">🔄 刷新</button>
+                </div>
+            </div>
+            <div id="billManagementContainer" style="display:none;">
+                <div id="billListContainer">
+                    <div class="empty" style="padding:12px 0;">点击「刷新」查看所有账单</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 危险操作区 -->
+        <div style="background:#fff5f5;border-radius:12px;padding:14px 20px;margin-bottom:20px;border:2px solid #fecaca;">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <div>
-                    <h3 style="font-size:14px;color:#f57f17;">⚡ 清除排行数据</h3>
-                    <div style="font-size:12px;color:#888;">将排行统计数据归零（仅影响激励榜显示），不会修改任何账单和认领记录。</div>
+                    <h3 style="font-size:14px;color:#dc2626;">⚠️ 危险操作区</h3>
+                    <div style="font-size:12px;color:#888;">以下操作不可撤销，请谨慎使用</div>
                 </div>
-                <button class="btn btn-warning" onclick="confirmClearRanking()">⚡ 清除排行数据</button>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-danger" onclick="confirmResetBills()">🗑️ 重置全部账单</button>
+                    <button class="btn btn-warning" onclick="confirmClearRanking()">⚡ 清除排行数据</button>
+                    <button class="btn btn-danger" onclick="confirmFactoryReset()">💥 恢复出厂设置</button>
+                </div>
             </div>
         </div>
 
@@ -239,9 +351,65 @@
         </div>
     </div>
 
+    <!-- 编辑账单模态框 -->
+    <div class="modal" id="editBillModal">
+        <div class="modal-box">
+            <h3>✏️ 编辑账单</h3>
+            <input type="hidden" id="editBillId" />
+            <div class="form-group">
+                <label>账单标题</label>
+                <input type="text" id="editBillTitle" placeholder="请输入账单标题" />
+            </div>
+            <div class="form-group">
+                <label>金额</label>
+                <input type="number" id="editBillAmount" step="0.01" placeholder="0.00" />
+            </div>
+            <div class="form-group">
+                <label>购买人</label>
+                <select id="editBillPurchaser"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeEditBillModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveEditBill()">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑认领模态框 -->
+    <div class="modal" id="editClaimModal">
+        <div class="modal-box">
+            <h3>✏️ 编辑认领记录</h3>
+            <input type="hidden" id="editClaimId" />
+            <input type="hidden" id="editClaimBillId" />
+            <div class="form-group">
+                <label>认领人</label>
+                <select id="editClaimClaimant"></select>
+            </div>
+            <div class="form-group">
+                <label>金额</label>
+                <input type="number" id="editClaimAmount" step="0.01" placeholder="0.00" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeEditClaimModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveEditClaim()">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框（通用） -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-box">
+            <h3 id="confirmTitle">确认操作</h3>
+            <p id="confirmMessage" style="font-size:14px;color:#555;margin-bottom:16px;"></p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeConfirmModal()">取消</button>
+                <button class="btn btn-danger" id="confirmBtn" onclick="executeConfirm()">确认</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'http://localhost:3000/api';
-        const ADMIN_USERNAME = 'chaibingkun';
 
         // ===== Token 管理 =====
         function getAdminToken() {
@@ -264,6 +432,30 @@
             localStorage.removeItem('admin_info');
         }
 
+        // ===== 通用确认弹窗 =====
+        let confirmCallback = null;
+
+        function showConfirmModal(title, message, btnText, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmBtn').textContent = btnText || '确认';
+            confirmCallback = callback;
+            document.getElementById('confirmModal').classList.add('open');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('open');
+            confirmCallback = null;
+        }
+
+        function executeConfirm() {
+            const cb = confirmCallback;
+            closeConfirmModal();
+            if (typeof cb === 'function') {
+                cb();
+            }
+        }
+
         /**
          * 统一的 API 调用（增强版：带 Token 认证）
          */
@@ -279,8 +471,9 @@
                 config.body = JSON.stringify(options.body);
             }
 
-            // 自动添加 token（除了登录接口）
-            if (endpoint !== '/auth/login') {
+            // 自动添加 token（除了登录和首次设置相关接口）
+            const noAuthEndpoints = ['/auth/login', '/admin/setup', '/admin/check-setup', '/admin/factory-reset'];
+            if (!noAuthEndpoints.includes(endpoint)) {
                 const token = getAdminToken();
                 if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
@@ -295,18 +488,14 @@
                 const elapsed = Date.now() - startTime;
                 console.log(`⏱️ [AM ${requestId}] 响应: ${response.status} ${elapsed}ms`);
 
-                // 检查 HTTP 状态码
                 if (!response.ok) {
                     let errorMsg = `服务器返回错误状态 (${response.status})`;
                     if (response.status === 0) errorMsg = 'CORS 跨域错误，请检查后端配置';
                     else if (response.status === 401) errorMsg = '登录已过期，请重新登录';
                     else if (response.status === 404) errorMsg = `接口不存在 (${endpoint})`;
                     else if (response.status === 500) errorMsg = '服务器内部错误';
-                    else if (response.status === 502) errorMsg = '后端服务不可用 (502)';
-                    else if (response.status === 503) errorMsg = '后端服务维护中 (503)';
                     console.error(`❌ [AM ${requestId}] ${errorMsg}`);
 
-                    // token 失效，跳回登录
                     if (response.status === 401) {
                         handleAdminLogout();
                         throw new Error('登录已过期，请重新登录');
@@ -336,7 +525,6 @@
             } catch (error) {
                 if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
                     console.error(`❌ [AM ${requestId}] 网络连接失败: ${API_BASE}`);
-                    console.error('❌ 请确认后端服务已启动: cd backend && python app.py');
                     throw new Error(`无法连接到后端服务（${API_BASE}），请确认后端是否已启动`);
                 }
                 console.error(`❌ [AM ${requestId}] 请求失败: ${error.message}`);
@@ -352,6 +540,97 @@
             el.textContent = message;
             document.body.appendChild(el);
             setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3000);
+        }
+
+        // ===== 检查管理员是否已设置 =====
+        async function checkAdminSetup() {
+            try {
+                const resp = await apiCall('/admin/check-setup');
+                const configured = resp.data.configured;
+                if (configured) {
+                    // 已设置 → 显示登录界面
+                    document.getElementById('setupOverlay').classList.add('hidden');
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                    // 尝试自动恢复登录（localStorage 有有效 token）
+                    const token = getAdminToken();
+                    if (token) {
+                        try {
+                            await apiCall('/admin/users');
+                            showManagementArea();
+                            loadUsers();
+                            loadBackups();
+                            return;
+                        } catch (e) {
+                            clearAdminToken();
+                            clearAdminInfo();
+                        }
+                    }
+                } else {
+                    // 未设置 → 显示设置界面（默认就是 setupOverlay）
+                    document.getElementById('setupOverlay').classList.remove('hidden');
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                }
+            } catch (e) {
+                console.error('❌ 检查管理员设置失败:', e);
+                showToast('无法连接后端服务', 'error');
+                document.getElementById('setupOverlay').classList.add('hidden');
+                document.getElementById('loginOverlay').classList.remove('hidden');
+            }
+        }
+
+        // ===== 首次设置管理员 =====
+        async function handleAdminSetup() {
+            const username = document.getElementById('setupUsername').value.trim();
+            const password = document.getElementById('setupPassword').value.trim();
+            const confirm = document.getElementById('setupConfirm').value.trim();
+            const setupBtn = document.getElementById('setupBtn');
+            const errorEl = document.getElementById('setupError');
+
+            errorEl.textContent = '';
+            if (!username || !password) {
+                errorEl.textContent = '请输入账号和密码';
+                return;
+            }
+            if (password.length < 4) {
+                errorEl.textContent = '密码长度至少4位';
+                return;
+            }
+            if (password !== confirm) {
+                errorEl.textContent = '两次密码输入不一致';
+                return;
+            }
+
+            setupBtn.disabled = true;
+            setupBtn.textContent = '设置中...';
+
+            try {
+                await apiCall('/admin/setup', {
+                    method: 'POST',
+                    body: { username, password, confirm }
+                });
+                showToast('✅ 管理员设置成功，请登录', 'success');
+                // 切换到登录界面
+                document.getElementById('setupOverlay').classList.add('hidden');
+                document.getElementById('loginOverlay').classList.remove('hidden');
+                document.getElementById('loginUsername').value = username;
+                document.getElementById('loginPassword').focus();
+            } catch (e) {
+                errorEl.textContent = '❌ ' + e.message;
+                setupBtn.disabled = false;
+                setupBtn.textContent = '确认设置';
+            }
+        }
+
+        // ===== 显示管理界面 =====
+        function showManagementArea() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('managementArea').classList.add('visible');
+            const info = getAdminInfo();
+            if (info) {
+                document.getElementById('adminInfo').textContent = `👤 ${info.name || info.username}`;
+            }
+            // 预加载账单数据（后台静默加载）
+            loadBills();
         }
 
         // ===== 管理员登录 =====
@@ -384,7 +663,6 @@
                     return;
                 }
 
-                // 保存 token 和管理员信息
                 setAdminToken(userData.token);
                 setAdminInfo({
                     user_id: userData.user_id,
@@ -395,13 +673,9 @@
                 console.log(`✅ [登录成功] 管理员 ${username} 已验证身份`);
                 showToast(`✅ 欢迎，${userData.name || username}！`, 'success');
 
-                // 显示管理界面
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('managementArea').classList.add('visible');
-                document.getElementById('adminInfo').textContent = `👤 ${userData.name || username}`;
-
-                // 加载数据
+                showManagementArea();
                 loadUsers();
+                loadBackups();
 
             } catch (e) {
                 console.error(`❌ [登录失败] ${e.message}`);
@@ -435,7 +709,15 @@
         document.getElementById('loginUsername').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') handleAdminLogin();
         });
+        // 回车设置
+        document.getElementById('setupConfirm').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleAdminSetup();
+        });
+        document.getElementById('setupPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') handleAdminSetup();
+        });
 
+        // ===== 账号管理 =====
         async function loadUsers() {
             try {
                 const resp = await apiCall('/admin/users');
@@ -446,11 +728,9 @@
                     return;
                 }
                 const roleMap = { 'father': '爸爸', 'mother': '妈妈', 'son': '儿子', 'daughter': '女儿' };
-                // 过滤掉仅用于后台登录的管理账号（id=1）
-                const familyUsers = data.filter(u => u.id !== 1);
-                tbody.innerHTML = familyUsers.map((u, idx) => `
+                tbody.innerHTML = data.map((u, idx) => `
                     <tr>
-                        <td>${idx + 1}</td>
+                        <td>${u.id}</td>
                         <td><code>${u.username}</code></td>
                         <td>${u.name}</td>
                         <td>${roleMap[u.role] || u.role}</td>
@@ -494,7 +774,6 @@
         }
 
         function openEdit(userId) {
-            // 从表格中获取数据（简化处理，重新请求）
             fetchUserAndOpenEdit(userId);
         }
 
@@ -503,7 +782,7 @@
                 const resp = await apiCall('/admin/users');
                 const user = resp.data.find(u => u.id === userId);
                 if (!user) { showToast('用户不存在', 'error'); return; }
-                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserId').value = user.id;
                 document.getElementById('editUsername').value = user.username;
                 document.getElementById('editName').value = user.name;
                 document.getElementById('editRole').value = user.role;
@@ -511,120 +790,479 @@
                 document.getElementById('editPassword').value = '';
                 document.getElementById('editModal').classList.add('open');
             } catch (e) {
-                console.error(`❌ [账号管理] 加载用户 ${userId} 编辑信息失败:`, e);
-                showToast('加载失败: ' + e.message, 'error');
+                showToast('获取用户信息失败: ' + e.message, 'error');
             }
+        }
+
+        async function saveEdit() {
+            const userId = parseInt(document.getElementById('editUserId').value);
+            const data = {
+                username: document.getElementById('editUsername').value.trim(),
+                name: document.getElementById('editName').value.trim(),
+                role: document.getElementById('editRole').value,
+                max_commitment: parseFloat(document.getElementById('editMaxCommitment').value) || 0
+            };
+            const pwd = document.getElementById('editPassword').value.trim();
+            if (pwd) data.password = pwd;
+
+            try {
+                await apiCall(`/admin/users/${userId}`, { method: 'PUT', body: data });
+                showToast('✅ 修改成功', 'success');
+                closeModal();
+                loadUsers();
+            } catch (e) {
+                showToast('修改失败: ' + e.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId) {
+            showConfirmModal(
+                '⚠️ 确认删除',
+                `确定要删除该账号吗？此操作不可撤销。`,
+                '确认删除',
+                async () => {
+                    try {
+                        await apiCall(`/admin/users/${userId}`, { method: 'DELETE' });
+                        showToast('✅ 删除成功', 'success');
+                        loadUsers();
+                    } catch (e) {
+                        showToast('删除失败: ' + e.message, 'error');
+                    }
+                }
+            );
         }
 
         function closeModal() {
             document.getElementById('editModal').classList.remove('open');
         }
 
-        async function saveEdit() {
-            const userId = parseInt(document.getElementById('editUserId').value);
-            const username = document.getElementById('editUsername').value.trim();
-            const name = document.getElementById('editName').value.trim();
-            const role = document.getElementById('editRole').value;
-            const max_commitment = parseFloat(document.getElementById('editMaxCommitment').value) || 0;
-            const password = document.getElementById('editPassword').value.trim();
-
-            if (!username) { showToast('请输入账号', 'error'); return; }
-            if (!name) { showToast('请输入姓名', 'error'); return; }
-
-            try {
-                const body = { username, name, role, max_commitment };
-                if (password) body.password = password;
-                await apiCall(`/admin/users/${userId}`, {
-                    method: 'PUT',
-                    body
-                });
-                showToast('✅ 修改成功', 'success');
-                closeModal();
-                loadUsers();
-            } catch (e) {
-                console.error(`❌ [账号管理] 修改用户 ${userId} 失败:`, e);
-                showToast('修改失败: ' + e.message, 'error');
-            }
-        }
-
-        async function deleteUser(userId) {
-            if (!confirm('确定要删除该账号吗？此操作不可撤销！')) return;
-            try {
-                await apiCall(`/admin/users/${userId}`, { method: 'DELETE' });
-                showToast('✅ 删除成功', 'success');
-                loadUsers();
-            } catch (e) {
-                console.error(`❌ [账号管理] 删除用户 ${userId} 失败:`, e);
-                showToast('删除失败: ' + e.message, 'error');
-            }
-        }
-
-        // 点击模态框外部关闭
-        document.getElementById('editModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        // ===== 初始化 =====
-        (async function init() {
-            // 启动时检测后端连接
-            console.log(`🔍 [启动检测] 正在检测后端连接: ${API_BASE}/ping`);
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const resp = await fetch(`${API_BASE}/ping`, {
-                    method: 'GET',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!resp.ok) {
-                    console.warn(`⚠️ [启动检测] 后端状态异常 (${resp.status})`);
-                    document.getElementById('loginError').textContent = '⚠️ 后端服务状态异常，请稍后重试';
+        // ===== 重置账单 =====
+        function confirmResetBills() {
+            showConfirmModal(
+                '⚠️ 重置全部账单',
+                '确定要清空所有账单和认领记录吗？此操作不可撤销！',
+                '确认重置',
+                async () => {
+                    try {
+                        await apiCall('/admin/reset', { method: 'POST' });
+                        showToast('✅ 账单数据已清空', 'success');
+                        loadUsers();
+                    } catch (e) {
+                        showToast('重置失败: ' + e.message, 'error');
+                    }
                 }
-            } catch (err) {
-                console.error(`❌ [启动检测] 无法连接到后端: ${API_BASE}`);
-                console.error('❌ 请确认后端已启动: cd backend && python app.py');
-                document.getElementById('loginError').textContent =
-                    err.name === 'AbortError' ? '⏰ 后端连接超时（5秒）' : '🌐 无法连接到后端服务';
-                return;
-            }
+            );
+        }
 
-            // 检查是否有已保存的登录状态
-            const savedToken = getAdminToken();
-            const savedInfo = getAdminInfo();
-            if (savedToken && savedInfo) {
-                console.log(`🔑 [已登录] 检测到已保存的登录状态: ${savedInfo.username}`);
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('managementArea').classList.add('visible');
-                document.getElementById('adminInfo').textContent = `👤 ${savedInfo.name || savedInfo.username}`;
-                loadUsers();
-            }
-            // 否则保持登录界面显示
-        })();
+        // ===== 清除排行 =====
+        function confirmClearRanking() {
+            showConfirmModal(
+                '⚡ 清除排行数据',
+                '确定要清除排行统计数据吗？（仅影响激励榜显示，不会修改账单和认领记录）',
+                '确认清除',
+                async () => {
+                    try {
+                        await apiCall('/admin/clear-ranking', { method: 'POST' });
+                        showToast('✅ 排行数据已清除', 'success');
+                    } catch (e) {
+                        showToast('清除失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
 
-        /** 重置全部账单数据 */
-        async function confirmResetBills() {
-            if (!confirm('⚠️ 确定要清空所有账单和认领记录吗？\n\n此操作不可撤销！')) return;
-            if (!confirm('二次确认：所有历史账单数据将被永久删除，确定继续？')) return;
+        // ===== 备份系统 =====
+        async function createBackup() {
             try {
-                await apiCall('/admin/reset', { method: 'POST' });
-                showToast('✅ 已清空全部账单和认领数据', 'success');
+                showToast('⏳ 正在创建备份...', 'info');
+                await apiCall('/admin/backup', { method: 'POST' });
+                showToast('✅ 备份创建成功', 'success');
+                loadBackups();
             } catch (e) {
-                console.error('❌ [重置账单] 重置失败:', e);
-                showToast('重置失败: ' + e.message, 'error');
+                showToast('备份失败: ' + e.message, 'error');
             }
         }
 
-        /** 清除排行数据 */
-        async function confirmClearRanking() {
-            if (!confirm('⚡ 确定要清除激励榜数据吗？\n\n所有排行统计将归零。\n不会修改任何账单和认领记录。')) return;
+        async function loadBackups() {
+            const container = document.getElementById('backupList');
             try {
-                await apiCall('/admin/clear-ranking', { method: 'POST' });
-                showToast('✅ 已清除排行数据', 'success');
+                const resp = await apiCall('/admin/backups');
+                const data = resp.data;
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="empty" style="padding:12px 0;">暂无备份记录</div>';
+                    return;
+                }
+                container.innerHTML = data.map(b => {
+                    const timeStr = b.created_at.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, '$1-$2-$3 $4:$5:$6');
+                    const fileCount = Object.keys(b.files || {}).length;
+                    return `
+                        <div class="backup-item">
+                            <div>
+                                <span class="backup-time">🕐 ${timeStr}</span>
+                                <span style="color:#999;margin-left:8px;font-size:12px;">${fileCount} 个文件</span>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn btn-sm btn-primary" onclick="restoreBackup('${b.id}')">恢复</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteBackup('${b.id}')" style="font-size:11px;">删除</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             } catch (e) {
-                console.error('❌ [清除排行] 重置失败:', e);
-                showToast('清除排行失败: ' + e.message, 'error');
+                container.innerHTML = `<div class="empty" style="padding:12px 0;color:#e74c3c;">加载失败: ${e.message}</div>`;
             }
         }
+
+        async function restoreBackup(backupId) {
+            showConfirmModal(
+                '♻️ 恢复备份',
+                `确定要从备份「${backupId}」恢复数据吗？当前数据将被覆盖！`,
+                '确认恢复',
+                async () => {
+                    try {
+                        await apiCall(`/admin/backup/restore/${backupId}`, { method: 'POST' });
+                        showToast('✅ 数据已恢复', 'success');
+                        loadUsers();
+                    } catch (e) {
+                        showToast('恢复失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        async function deleteBackup(backupId) {
+            showConfirmModal(
+                '🗑️ 删除备份',
+                `确定要删除备份「${backupId}」吗？此操作不可撤销！`,
+                '确认删除',
+                async () => {
+                    try {
+                        await apiCall(`/admin/backup/delete/${backupId}`, { method: 'DELETE' });
+                        showToast('✅ 备份已删除', 'success');
+                        loadBackups();
+                    } catch (e) {
+                        showToast('删除失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        // ===== 恢复出厂设置 =====
+        function confirmFactoryReset() {
+            showConfirmModal(
+                '💥 恢复出厂设置',
+                '确定要恢复出厂设置吗？所有数据（账单、认领、用户、管理员账号）将被清空！此操作不可撤销！',
+                '确认恢复出厂',
+                async () => {
+                    try {
+                        await apiCall('/admin/factory-reset', { method: 'POST' });
+                        showToast('✅ 已恢复出厂设置', 'success');
+                        clearAdminToken();
+                        clearAdminInfo();
+                        document.getElementById('managementArea').classList.remove('visible');
+                        document.getElementById('loginOverlay').classList.add('hidden');
+                        document.getElementById('setupOverlay').classList.remove('hidden');
+                        document.getElementById('setupUsername').value = '';
+                        document.getElementById('setupPassword').value = '';
+                        document.getElementById('setupConfirm').value = '';
+                        document.getElementById('setupError').textContent = '';
+                    } catch (e) {
+                        showToast('恢复出厂设置失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        function confirmFactoryResetOnLogin() {
+            showConfirmModal(
+                '💥 恢复出厂设置',
+                '确定要恢复出厂设置吗？所有数据将被清空，管理员账号需重新设置！',
+                '确认恢复出厂',
+                async () => {
+                    try {
+                        await apiCall('/admin/factory-reset', { method: 'POST' });
+                        showToast('✅ 已恢复出厂设置', 'success');
+                        clearAdminToken();
+                        clearAdminInfo();
+                        document.getElementById('managementArea').classList.remove('visible');
+                        document.getElementById('loginOverlay').classList.add('hidden');
+                        document.getElementById('setupOverlay').classList.remove('hidden');
+                        document.getElementById('setupUsername').value = '';
+                        document.getElementById('setupPassword').value = '';
+                        document.getElementById('setupConfirm').value = '';
+                        document.getElementById('setupError').textContent = '';
+                    } catch (e) {
+                        showToast('恢复出厂设置失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        // ===== 账单管理 =====
+        let billsData = [];
+
+        function toggleBillSection() {
+            const container = document.getElementById('billManagementContainer');
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+            if (container.style.display === 'block' && billsData.length === 0) {
+                loadBills();
+            }
+        }
+
+        async function loadBills() {
+            const container = document.getElementById('billListContainer');
+            try {
+                const resp = await apiCall('/admin/bills');
+                billsData = resp.data || [];
+                if (billsData.length === 0) {
+                    container.innerHTML = '<div class="empty" style="padding:12px 0;">暂无账单记录</div>';
+                    return;
+                }
+                renderBillList(container);
+            } catch (e) {
+                container.innerHTML = `<div class="empty" style="padding:12px 0;color:#e74c3c;">加载失败: ${e.message}</div>`;
+            }
+        }
+
+        function renderBillList(container) {
+            const statusMap = {
+                'pending': '待认领', 'claiming': '认领中',
+                'transferring': '待转账', 'settled': '已结清'
+            };
+            const statusClassMap = {
+                'pending': 'status-pending', 'claiming': 'status-claiming',
+                'transferring': 'status-transferring', 'settled': 'status-settled'
+            };
+            container.innerHTML = billsData.map(b => `
+                <div class="bill-card">
+                    <div class="bill-header" onclick="toggleClaims(${b.id})">
+                        <div>
+                            <div class="bill-title">${b.title}</div>
+                            <div class="bill-meta">
+                                <span>🆔 #${b.id}</span>
+                                <span>💰 ¥${b.total_amount.toFixed(2)}</span>
+                                <span>👤 购买人: ${b.purchaser_name}</span>
+                                <span>📊 已认领: ¥${(b.claimed_amount || 0).toFixed(2)}</span>
+                                <span class="status-badge ${statusClassMap[b.status] || ''}">${statusMap[b.status] || b.status}</span>
+                                <span>📅 ${b.created_at}</span>
+                            </div>
+                        </div>
+                        <div class="bill-actions">
+                            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openEditBill(${b.id})">编辑</button>
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBill(${b.id},'${b.title}')">删除</button>
+                        </div>
+                    </div>
+                    <div class="claims-subtable" id="claims-${b.id}">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <span style="font-weight:600;font-size:13px;">📌 认领记录</span>
+                            <span class="toggle-claims" onclick="event.stopPropagation();toggleClaims(${b.id})">收起 ▲</span>
+                        </div>
+                        <div id="claims-content-${b.id}">
+                            <div class="empty" style="padding:4px 0;font-size:12px;">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            // 自动加载第一个账单的认领
+            billsData.forEach(b => loadBillClaims(b.id, false));
+        }
+
+        async function loadBillClaims(billId, showExpanded) {
+            const contentEl = document.getElementById('claims-content-' + billId);
+            if (!contentEl) return;
+            try {
+                const resp = await apiCall(`/admin/bills/${billId}/claims`);
+                const claims = resp.data || [];
+                if (claims.length === 0) {
+                    contentEl.innerHTML = '<div style="font-size:12px;color:#999;padding:4px 0;">暂无认领记录</div>';
+                    return;
+                }
+                const statusMap = { 'pending': '待确认', 'settled': '已结清' };
+                contentEl.innerHTML = `
+                    <table style="width:100%;">
+                        <thead>
+                            <tr><th>ID</th><th>认领人</th><th>金额</th><th>状态</th><th>操作</th></tr>
+                        </thead>
+                        <tbody>
+                            ${claims.map(c => `
+                                <tr>
+                                    <td>#${c.id}</td>
+                                    <td>${c.claimant_name}</td>
+                                    <td>¥${c.amount.toFixed(2)}</td>
+                                    <td><span class="status-badge ${c.status === 'settled' ? 'status-settled' : 'status-pending'}">${statusMap[c.status] || c.status}</span></td>
+                                    <td class="action-cell" style="gap:4px;">
+                                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openEditClaim(${c.id}, ${billId})" style="padding:2px 8px;font-size:11px;">编辑</button>
+                                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteClaim(${c.id}, ${billId})" style="padding:2px 8px;font-size:11px;">删除</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                if (showExpanded) {
+                    const el = document.getElementById('claims-' + billId);
+                    if (el) el.classList.add('open');
+                }
+            } catch (e) {
+                contentEl.innerHTML = `<div style="font-size:12px;color:#e74c3c;padding:4px 0;">加载失败: ${e.message}</div>`;
+            }
+        }
+
+        function toggleClaims(billId) {
+            const el = document.getElementById('claims-' + billId);
+            if (!el) return;
+            el.classList.toggle('open');
+            if (el.classList.contains('open')) {
+                loadBillClaims(billId, false);
+            }
+        }
+
+        // ===== 编辑账单 =====
+        async function openEditBill(billId) {
+            try {
+                const resp = await apiCall('/admin/members');
+                const users = resp.data || [];
+                const bill = billsData.find(b => b.id === billId);
+                if (!bill) { showToast('账单数据未加载', 'error'); return; }
+
+                document.getElementById('editBillId').value = bill.id;
+                document.getElementById('editBillTitle').value = bill.title;
+                document.getElementById('editBillAmount').value = bill.total_amount;
+
+                const sel = document.getElementById('editBillPurchaser');
+                sel.innerHTML = users.map(u =>
+                    `<option value="${u.id}" ${u.id === bill.purchaser_id ? 'selected' : ''}>${u.name}</option>`
+                ).join('');
+
+                document.getElementById('editBillModal').classList.add('open');
+            } catch (e) {
+                showToast('获取数据失败: ' + e.message, 'error');
+            }
+        }
+
+        function closeEditBillModal() {
+            document.getElementById('editBillModal').classList.remove('open');
+        }
+
+        async function saveEditBill() {
+            const billId = parseInt(document.getElementById('editBillId').value);
+            const title = document.getElementById('editBillTitle').value.trim();
+            const total_amount = parseFloat(document.getElementById('editBillAmount').value) || 0;
+            const purchaser_id = parseInt(document.getElementById('editBillPurchaser').value);
+
+            if (!title) { showToast('请输入账单标题', 'error'); return; }
+            if (total_amount <= 0) { showToast('金额必须大于0', 'error'); return; }
+
+            try {
+                await apiCall(`/admin/bills/${billId}`, {
+                    method: 'PUT',
+                    body: { title, total_amount, purchaser_id }
+                });
+                showToast('✅ 账单已更新', 'success');
+                closeEditBillModal();
+                loadBills();
+            } catch (e) {
+                showToast('编辑失败: ' + e.message, 'error');
+            }
+        }
+
+        function deleteBill(billId, title) {
+            showConfirmModal(
+                '⚠️ 删除账单',
+                `确定要删除账单「${title}」(#${billId}) 吗？该账单的所有认领记录也将被删除！`,
+                '确认删除',
+                async () => {
+                    try {
+                        await apiCall(`/admin/bills/${billId}`, { method: 'DELETE' });
+                        showToast('✅ 账单已删除', 'success');
+                        loadBills();
+                    } catch (e) {
+                        showToast('删除失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        // ===== 编辑认领 =====
+        async function openEditClaim(claimId, billId) {
+            try {
+                const resp = await apiCall('/admin/members');
+                const users = resp.data || [];
+                const claimsResp = await apiCall(`/admin/bills/${billId}/claims`);
+                const claims = claimsResp.data || [];
+                const claim = claims.find(c => c.id === claimId);
+                if (!claim) { showToast('认领记录未找到', 'error'); return; }
+
+                document.getElementById('editClaimId').value = claim.id;
+                document.getElementById('editClaimBillId').value = billId;
+                document.getElementById('editClaimAmount').value = claim.amount;
+
+                const sel = document.getElementById('editClaimClaimant');
+                sel.innerHTML = users.map(u =>
+                    `<option value="${u.id}" ${u.id === claim.claimant_id ? 'selected' : ''}>${u.name}</option>`
+                ).join('');
+
+                document.getElementById('editClaimModal').classList.add('open');
+            } catch (e) {
+                showToast('获取数据失败: ' + e.message, 'error');
+            }
+        }
+
+        function closeEditClaimModal() {
+            document.getElementById('editClaimModal').classList.remove('open');
+        }
+
+        async function saveEditClaim() {
+            const claimId = parseInt(document.getElementById('editClaimId').value);
+            const billId = parseInt(document.getElementById('editClaimBillId').value);
+            const amount = parseFloat(document.getElementById('editClaimAmount').value) || 0;
+            const claimant_id = parseInt(document.getElementById('editClaimClaimant').value);
+
+            if (amount <= 0) { showToast('金额必须大于0', 'error'); return; }
+
+            try {
+                await apiCall(`/admin/claims/${claimId}`, {
+                    method: 'PUT',
+                    body: { amount, claimant_id }
+                });
+                showToast('✅ 认领记录已更新', 'success');
+                closeEditClaimModal();
+                loadBills();
+                // 如果当前认领区域已展开则刷新
+                const el = document.getElementById('claims-' + billId);
+                if (el && el.classList.contains('open')) {
+                    loadBillClaims(billId, false);
+                }
+            } catch (e) {
+                showToast('编辑失败: ' + e.message, 'error');
+            }
+        }
+
+        function deleteClaim(claimId, billId) {
+            showConfirmModal(
+                '⚠️ 删除认领',
+                '确定要删除该认领记录吗？',
+                '确认删除',
+                async () => {
+                    try {
+                        await apiCall(`/admin/claims/${claimId}`, { method: 'DELETE' });
+                        showToast('✅ 认领记录已删除', 'success');
+                        loadBills();
+                        const el = document.getElementById('claims-' + billId);
+                        if (el && el.classList.contains('open')) {
+                            loadBillClaims(billId, false);
+                        }
+                    } catch (e) {
+                        showToast('删除失败: ' + e.message, 'error');
+                    }
+                }
+            );
+        }
+
+        // ===== 页面加载 =====
+        window.addEventListener('DOMContentLoaded', function() {
+            checkAdminSetup();
+        });
     </script>
 </body>
 </html>

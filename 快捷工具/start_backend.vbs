@@ -1,19 +1,20 @@
-' å®¶åº­æŠ¥é”€ç®¡ç†ç³»ç»Ÿ - é™é»˜å¯åŠ¨åç«¯æœåŠ¡
-' ä»¥å®Œå…¨éšè—çš„æ–¹å¼å¯åŠ¨ Flask åç«¯ï¼Œæ— ä»»ä½•å¼¹çª—
+'
+' ¼ÒÍ¥±¨Ïú¹ÜÀíÏµÍ³ - ¾²Ä¬Æô¶¯ºó¶Ë·şÎñ
+' ÒÔÍêÈ«Òş²ØµÄ·½Ê½Æô¶¯ Flask ºó¶Ë£¬ÎŞÈÎºÎµ¯´°
 
 Dim objShell, objFSO, sScriptDir, sBackendDir, sPythonPath, sScriptPath
 
 Set objShell = CreateObject("WScript.Shell")
 Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-' è·å– backend ç›®å½•çš„ç»å¯¹è·¯å¾„
+' »ñÈ¡ backend Ä¿Â¼µÄ¾ø¶ÔÂ·¾¶
 sScriptDir = objFSO.GetParentFolderName(WScript.ScriptFullName)
 sBackendDir = objFSO.GetAbsolutePathName(sScriptDir & "\..\backend")
 
-sPythonPath = "D:\python-file\python.exe"
+sPythonPath = "D:\×ÀÃæÎÄ¼ş\GitHub\family-money\.venv\Scripts\python.exe"
 sScriptPath = sBackendDir & "\app.py"
 
-' æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+' ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
 If Not objFSO.FileExists(sPythonPath) Then
     WScript.Quit 1
 End If
@@ -22,7 +23,7 @@ If Not objFSO.FileExists(sScriptPath) Then
     WScript.Quit 1
 End If
 
-' ä»¥éšè—çª—å£æ¨¡å¼å¯åŠ¨ Flaskï¼ˆ0=éšè—çª—å£, False=å¼‚æ­¥æ‰§è¡Œï¼‰
+' ÒÔÒş²Ø´°¿ÚÄ£Ê½Æô¶¯ Flask£¨0=Òş²Ø´°¿Ú, False=Òì²½Ö´ĞĞ£©
 objShell.Run """" & sPythonPath & """ """ & sScriptPath & """", 0, False
 
 Set objShell = Nothing

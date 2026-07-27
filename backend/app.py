@@ -19,9 +19,11 @@
 
 import json
 import os
+import shutil
+import sys
 import uuid
 from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder='.')
@@ -69,6 +71,41 @@ def payload_too_large_handler(e):
     }), 413
 
 # ================================================================
+# 0.5 日志文件配置 — 将 print 输出同时写入文件，供控制台查看
+# ================================================================
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'server.log')
+
+class LogWriter:
+    """将 print 输出同时写入日志文件和终端"""
+    def __init__(self, log_path, clean=False):
+        self.log_path = log_path
+        self.terminal = sys.stdout
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+        if clean:
+            with open(log_path, 'w', encoding='utf-8') as f:
+                f.write(f'=== 服务启动于 {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} ===\n')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.terminal.flush()
+        if message.strip():
+            try:
+                with open(self.log_path, 'a', encoding='utf-8') as f:
+                    ts = datetime.now().strftime('%H:%M:%S')
+                    f.write(f'[{ts}] {message}')
+                    f.flush()
+            except:
+                pass  # 日志写入失败不影响服务运行
+
+    def flush(self):
+        self.terminal.flush()
+
+# 主进程启动时清空日志；子进程（debug reloader）只追加不清空
+_is_reloader = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
+sys.stdout = LogWriter(LOG_FILE, clean=not _is_reloader)
+sys.stderr = sys.stdout
+
+# ================================================================
 # 1. 文件路径
 # ================================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,6 +113,8 @@ FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
 USERS_FILE = os.path.join(BASE_DIR, 'users.json')
 BILLS_FILE = os.path.join(BASE_DIR, 'bills.json')
 CLAIMS_FILE = os.path.join(BASE_DIR, 'claims.json')
+SETTINGS_FILE = os.path.join(BASE_DIR, 'settings.json')
+BACKUP_DIR = os.path.join(BASE_DIR, 'backups')
 
 # ================================================================
 # 2. 数据读写工具
@@ -144,24 +183,15 @@ def init_data():
         users = [
             {
                 "id": 1,
-                "username": "chaibingkun",
-                "password": "cbk4679585858",
-                "name": "柴炳坤",
-                "role": "father",
-                "is_admin": True,
-                "max_commitment": 500
-            },
-            {
-                "id": 2,
                 "username": "mom",
                 "password": "123456",
                 "name": "妈妈",
                 "role": "mother",
-                "is_admin": True,
+                "is_admin": False,
                 "max_commitment": 300
             },
             {
-                "id": 3,
+                "id": 2,
                 "username": "son",
                 "password": "123456",
                 "name": "儿子",
@@ -170,7 +200,7 @@ def init_data():
                 "max_commitment": 100
             },
             {
-                "id": 4,
+                "id": 3,
                 "username": "daughter",
                 "password": "123456",
                 "name": "女儿",
@@ -185,6 +215,10 @@ def init_data():
         write_json(BILLS_FILE, [])
     if not os.path.exists(CLAIMS_FILE):
         write_json(CLAIMS_FILE, [])
+    
+    # 确保备份目录存在
+    if not os.path.exists(BACKUP_DIR):
+        os.makedirs(BACKUP_DIR, exist_ok=True)
 
 init_data()
 
@@ -245,7 +279,41 @@ def get_user_payable(user_id):
                if c.get('claimant_id') == user_id and c.get('status') == 'pending')
 
 # ================================================================
-# 4.5 健康检查
+# 4.5 管理员配置工具（settings.json）
+# ================================================================
+def read_settings():
+    """读取 settings.json 配置"""
+    if not os.path.exists(SETTINGS_FILE):
+        return {}
+    try:
+        with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def write_settings(data):
+    """写入 settings.json 配置"""
+    try:
+        tmp_path = SETTINGS_FILE + '.tmp'
+        with open(tmp_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, SETTINGS_FILE)
+    except Exception as e:
+        print(f'❌ [写入配置异常] {e}')
+        raise Exception(f'保存配置失败: {e}')
+
+def is_admin_configured():
+    """检查管理员是否已配置"""
+    s = read_settings()
+    return bool(s.get('admin_username') and s.get('admin_password'))
+
+def check_admin_credentials(username, password):
+    """验证管理员账号密码"""
+    s = read_settings()
+    return s.get('admin_username') == username and s.get('admin_password') == password
+
+# ================================================================
+# 4.6 健康检查
 # ================================================================
 @app.route('/api/ping', methods=['GET'])
 def ping():
@@ -274,6 +342,24 @@ def login():
         
         if not username or not password:
             return jsonify({'code': 1000, 'message': '账号和密码不能为空', 'error_detail': '请填写完整的登录信息'})
+        
+        # 先检查是否为 settings.json 中的管理员
+        if check_admin_credentials(username, password):
+            token = str(uuid.uuid4())
+            admin_settings = read_settings()
+            return jsonify({
+                'code': 0,
+                'message': '管理员登录成功',
+                'data': {
+                    'token': token,
+                    'user_id': -1,
+                    'username': admin_settings.get('admin_username', username),
+                    'name': '管理员',
+                    'role': 'admin',
+                    'is_admin': True,
+                    'max_commitment': 0
+                }
+            })
         
         user = find_user_by_username(username)
         if not user or user.get('password') != password:
@@ -325,9 +411,6 @@ def dashboard():
         members = []
         current_user_data = {}
         for u in users:
-            # 跳过仅用于后台登录的管理账号（id=1），不出现在前端家庭成员中
-            if u.get('id') == 1:
-                continue
             used = get_user_claimed_amount(u.get('id'))
             member = {
                 'id': u.get('id'),
@@ -882,6 +965,178 @@ def admin_bills():
         traceback.print_exc()
         return jsonify({'code': 5000, 'message': f'获取账单列表异常: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
+
+@app.route('/api/admin/bills/<int:bill_id>', methods=['PUT'])
+def admin_update_bill(bill_id):
+    """管理员编辑账单（标题、金额、购买人）"""
+    try:
+        bills = read_json(BILLS_FILE)
+        bill = next((b for b in bills if b.get('id') == bill_id), None)
+        if not bill:
+            return jsonify({'code': 404, 'message': f'账单不存在 (ID: {bill_id})'})
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 1000, 'message': '请求数据为空'})
+
+        if 'title' in data and data['title']:
+            bill['title'] = data['title']
+        if 'total_amount' in data:
+            amount = float(data['total_amount'])
+            if amount <= 0:
+                return jsonify({'code': 1000, 'message': '金额必须大于0'})
+            bill['total_amount'] = amount
+        if 'purchaser_id' in data:
+            uid = int(data['purchaser_id'])
+            if not find_user_by_id(uid):
+                return jsonify({'code': 1000, 'message': f'用户不存在 (ID: {uid})'})
+            bill['purchaser_id'] = uid
+
+        write_json(BILLS_FILE, bills)
+        print(f'♻️ [管理员] 已编辑账单 ID={bill_id}')
+        return jsonify({'code': 0, 'message': '账单已更新'})
+    except Exception as e:
+        print(f'❌ [后台-编辑账单异常] bill_id={bill_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'编辑账单失败: {str(e)}'})
+
+
+@app.route('/api/admin/bills/<int:bill_id>', methods=['DELETE'])
+def admin_delete_bill(bill_id):
+    """管理员删除指定账单及其所有认领记录"""
+    try:
+        bills = read_json(BILLS_FILE)
+        bill = next((b for b in bills if b.get('id') == bill_id), None)
+        if not bill:
+            return jsonify({'code': 404, 'message': f'账单不存在 (ID: {bill_id})'})
+
+        # 删除账单
+        bills = [b for b in bills if b.get('id') != bill_id]
+        write_json(BILLS_FILE, bills)
+
+        # 删除该账单的所有认领记录
+        claims = read_json(CLAIMS_FILE)
+        claims = [c for c in claims if c.get('bill_id') != bill_id]
+        write_json(CLAIMS_FILE, claims)
+
+        print(f'🗑️ [管理员] 已删除账单 ID={bill_id} 及其所有认领')
+        return jsonify({'code': 0, 'message': '账单及关联认领已删除'})
+    except Exception as e:
+        print(f'❌ [后台-删除账单异常] bill_id={bill_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'删除账单失败: {str(e)}'})
+
+
+@app.route('/api/admin/bills/<int:bill_id>/claims', methods=['GET'])
+def admin_bill_claims(bill_id):
+    """管理员获取指定账单的所有认领详情"""
+    try:
+        bills = read_json(BILLS_FILE)
+        bill = next((b for b in bills if b.get('id') == bill_id), None)
+        if not bill:
+            return jsonify({'code': 404, 'message': f'账单不存在 (ID: {bill_id})'})
+
+        claims = get_claims_by_bill(bill_id)
+        result = []
+        for c in claims:
+            result.append({
+                'id': c.get('id'),
+                'bill_id': c.get('bill_id'),
+                'claimant_id': c.get('claimant_id'),
+                'claimant_name': get_user_name(c.get('claimant_id')),
+                'amount': c.get('amount'),
+                'status': c.get('status'),
+                'status_text': '已结清' if c.get('status') == 'settled' else '待确认',
+                'payer_confirmed': c.get('payer_confirmed', False),
+                'receiver_confirmed': c.get('receiver_confirmed', False),
+                'created_at': c.get('created_at', '')
+            })
+
+        return jsonify({'code': 0, 'message': 'success', 'data': result})
+    except Exception as e:
+        print(f'❌ [后台-账单认领列表异常] bill_id={bill_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'获取认领列表失败: {str(e)}'})
+
+
+@app.route('/api/admin/claims/<int:claim_id>', methods=['PUT'])
+def admin_update_claim(claim_id):
+    """管理员编辑认领记录（修改认领人和金额）"""
+    try:
+        claims = read_json(CLAIMS_FILE)
+        claim = next((c for c in claims if c.get('id') == claim_id), None)
+        if not claim:
+            return jsonify({'code': 404, 'message': f'认领记录不存在 (ID: {claim_id})'})
+
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 1000, 'message': '请求数据为空'})
+
+        if 'amount' in data:
+            amount = float(data['amount'])
+            if amount <= 0:
+                return jsonify({'code': 1000, 'message': '金额必须大于0'})
+            claim['amount'] = amount
+        if 'claimant_id' in data:
+            uid = int(data['claimant_id'])
+            if not find_user_by_id(uid):
+                return jsonify({'code': 1000, 'message': f'用户不存在 (ID: {uid})'})
+            claim['claimant_id'] = uid
+
+        write_json(CLAIMS_FILE, claims)
+        print(f'♻️ [管理员] 已编辑认领 ID={claim_id}')
+        return jsonify({'code': 0, 'message': '认领记录已更新'})
+    except Exception as e:
+        print(f'❌ [后台-编辑认领异常] claim_id={claim_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'编辑认领失败: {str(e)}'})
+
+
+@app.route('/api/admin/claims/<int:claim_id>', methods=['DELETE'])
+def admin_delete_claim(claim_id):
+    """管理员删除指定认领记录"""
+    try:
+        claims = read_json(CLAIMS_FILE)
+        claim = next((c for c in claims if c.get('id') == claim_id), None)
+        if not claim:
+            return jsonify({'code': 404, 'message': f'认领记录不存在 (ID: {claim_id})'})
+
+        claims = [c for c in claims if c.get('id') != claim_id]
+        write_json(CLAIMS_FILE, claims)
+
+        # 如果账单下没有其他认领了，将账单状态重置为 pending
+        bill_id = claim.get('bill_id')
+        bills = read_json(BILLS_FILE)
+        remaining_claims = get_claims_by_bill(bill_id)
+        if remaining_claims:
+            total_claimed = sum(c.get('amount', 0) for c in remaining_claims)
+            bill = next((b for b in bills if b.get('id') == bill_id), None)
+            if bill:
+                if total_claimed >= bill.get('total_amount', 0):
+                    bill['status'] = 'transferring'
+                else:
+                    bill['status'] = 'claiming'
+                write_json(BILLS_FILE, bills)
+        else:
+            bills = read_json(BILLS_FILE)
+            bill = next((b for b in bills if b.get('id') == bill_id), None)
+            if bill:
+                bill['status'] = 'pending'
+                write_json(BILLS_FILE, bills)
+
+        print(f'🗑️ [管理员] 已删除认领 ID={claim_id}')
+        return jsonify({'code': 0, 'message': '认领记录已删除'})
+    except Exception as e:
+        print(f'❌ [后台-删除认领异常] claim_id={claim_id}, {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'删除认领失败: {str(e)}'})
+
+
 @app.route('/api/admin/claims/<int:claim_id>/force-settle', methods=['PUT'])
 def admin_force_settle(claim_id):
     try:
@@ -934,6 +1189,49 @@ def admin_update_commitment(user_id):
         import traceback
         traceback.print_exc()
         return jsonify({'code': 5000, 'message': f'修改额度失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
+
+# ---- 普通用户自行修改承诺上限（仅可调高，不清空已认领） ----
+@app.route('/api/user/commitment', methods=['PUT'])
+def user_update_commitment():
+    try:
+        data = request.get_json()
+        if not data or 'max_commitment' not in data or 'user_id' not in data:
+            return jsonify({'code': 1000, 'message': '请求数据错误', 'error_detail': '请提供 user_id 和 max_commitment 字段'})
+
+        user_id = int(data['user_id'])
+        new_limit = float(data['max_commitment'])
+
+        users = read_json(USERS_FILE)
+        user = next((u for u in users if u.get('id') == user_id), None)
+        if not user:
+            return jsonify({'code': 404, 'message': f'用户不存在 (ID: {user_id})'})
+
+        used = get_user_claimed_amount(user_id)
+        if new_limit < used:
+            return jsonify({
+                'code': 1002,
+                'message': f'修改失败：新上限（{new_limit:.0f} 元）不能低于已认领金额（{used:.0f} 元）',
+                'error_detail': f'当前已认领 {used:.0f} 元，上限至少需设为 {used:.0f} 元'
+            })
+
+        old_limit = user.get('max_commitment', 0)
+        user['max_commitment'] = new_limit
+        write_json(USERS_FILE, users)
+
+        print(f'📝 [修改承诺上限] 用户 {user.get("name")}(ID={user_id}) 上限 {old_limit:.0f} → {new_limit:.0f}')
+
+        return jsonify({
+            'code': 0,
+            'message': f'承诺上限已从 {old_limit:.0f} 元调整为 {new_limit:.0f} 元'
+        })
+
+    except (ValueError, TypeError) as e:
+        return jsonify({'code': 1000, 'message': f'额度参数格式错误: {str(e)}', 'error_detail': '请确保额度为有效数字'})
+    except Exception as e:
+        print(f'❌ [用户修改承诺上限异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'修改承诺上限失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
 
 # ================================================================
 # 13. 账号管理接口（图形化界面用）
@@ -1038,9 +1336,6 @@ def admin_update_user(user_id):
 def admin_delete_user(user_id):
     try:
         users = read_json(USERS_FILE)
-        if user_id == 1:
-            return jsonify({'code': 1005, 'message': '不能删除初始管理员账号'})
-        
         users = [u for u in users if u.get('id') != user_id]
         write_json(USERS_FILE, users)
         return jsonify({'code': 0, 'message': '删除成功'})
@@ -1049,6 +1344,197 @@ def admin_delete_user(user_id):
         import traceback
         traceback.print_exc()
         return jsonify({'code': 5000, 'message': f'删除用户失败: {str(e)}', 'error_detail': '请联系管理员查看后端日志'})
+
+# ================================================================
+# 13.5 管理员首次设置 & 备份 & 恢复出厂
+# ================================================================
+
+@app.route('/api/admin/check-setup', methods=['GET'])
+def admin_check_setup():
+    """检查管理员是否已完成首次设置"""
+    try:
+        configured = is_admin_configured()
+        return jsonify({'code': 0, 'message': 'success', 'data': {'configured': configured}})
+    except Exception as e:
+        print(f'❌ [检查设置异常] {e}')
+        return jsonify({'code': 5000, 'message': f'检查失败: {str(e)}'})
+
+@app.route('/api/admin/setup', methods=['POST'])
+def admin_setup():
+    """首次设置管理员账号密码（仅一次）"""
+    try:
+        if is_admin_configured():
+            return jsonify({'code': 1006, 'message': '管理员已设置，请直接登录'})
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'code': 1000, 'message': '请求数据为空'})
+        
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        confirm = data.get('confirm', '').strip()
+
+        if not username or not password:
+            return jsonify({'code': 1000, 'message': '账号和密码不能为空'})
+        if len(password) < 4:
+            return jsonify({'code': 1000, 'message': '密码长度至少4位'})
+        if password != confirm:
+            return jsonify({'code': 1000, 'message': '两次密码输入不一致'})
+
+        settings = read_settings()
+        settings['admin_username'] = username
+        settings['admin_password'] = password
+        settings['admin_setup_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        write_settings(settings)
+
+        print(f'🔐 [管理员] 首次设置完成: {username}')
+        return jsonify({'code': 0, 'message': '管理员设置成功'})
+    except Exception as e:
+        print(f'❌ [管理员设置异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'设置失败: {str(e)}'})
+
+@app.route('/api/admin/backup', methods=['POST'])
+def admin_create_backup():
+    """创建全量数据备份"""
+    try:
+        from datetime import datetime
+        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_subdir = os.path.join(BACKUP_DIR, f'backup_{ts}')
+        os.makedirs(backup_subdir, exist_ok=True)
+
+        files_to_backup = {
+            'users.json': USERS_FILE,
+            'bills.json': BILLS_FILE,
+            'claims.json': CLAIMS_FILE,
+            'settings.json': SETTINGS_FILE
+        }
+
+        manifest = {}
+        for name, src in files_to_backup.items():
+            if os.path.exists(src):
+                dst = os.path.join(backup_subdir, name)
+                with open(src, 'r', encoding='utf-8') as f_in:
+                    data = json.load(f_in)
+                with open(dst, 'w', encoding='utf-8') as f_out:
+                    json.dump(data, f_out, ensure_ascii=False, indent=2)
+                manifest[name] = 'ok'
+                print(f'💾 [备份] {name} 已备份')
+            else:
+                manifest[name] = 'skipped'
+
+        # 写入备份清单
+        info = {
+            'created_at': ts,
+            'files': manifest
+        }
+        with open(os.path.join(backup_subdir, 'manifest.json'), 'w', encoding='utf-8') as f:
+            json.dump(info, f, ensure_ascii=False, indent=2)
+
+        print(f'💾 [备份完成] {backup_subdir}')
+        return jsonify({'code': 0, 'message': '备份成功', 'data': {'path': f'backup_{ts}', 'files': manifest}})
+    except Exception as e:
+        print(f'❌ [备份异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'备份失败: {str(e)}'})
+
+@app.route('/api/admin/backups', methods=['GET'])
+def admin_list_backups():
+    """列出所有备份"""
+    try:
+        if not os.path.exists(BACKUP_DIR):
+            return jsonify({'code': 0, 'message': 'success', 'data': []})
+        
+        backups = []
+        for entry in sorted(os.listdir(BACKUP_DIR), reverse=True):
+            entry_path = os.path.join(BACKUP_DIR, entry)
+            if os.path.isdir(entry_path) and entry.startswith('backup_'):
+                manifest_path = os.path.join(entry_path, 'manifest.json')
+                manifest = {}
+                if os.path.exists(manifest_path):
+                    with open(manifest_path, 'r', encoding='utf-8') as f:
+                        manifest = json.load(f)
+                backups.append({
+                    'id': entry,
+                    'name': entry,
+                    'created_at': manifest.get('created_at', entry.replace('backup_', '')),
+                    'files': manifest.get('files', {})
+                })
+
+        return jsonify({'code': 0, 'message': 'success', 'data': backups})
+    except Exception as e:
+        print(f'❌ [列出备份异常] {e}')
+        return jsonify({'code': 5000, 'message': f'列出备份失败: {str(e)}'})
+
+@app.route('/api/admin/backup/restore/<backup_id>', methods=['POST'])
+def admin_restore_backup(backup_id):
+    """从指定备份恢复数据"""
+    try:
+        restore_path = os.path.join(BACKUP_DIR, backup_id)
+        if not os.path.isdir(restore_path):
+            return jsonify({'code': 404, 'message': f'备份不存在: {backup_id}'})
+
+        files_to_restore = {
+            'users.json': USERS_FILE,
+            'bills.json': BILLS_FILE,
+            'claims.json': CLAIMS_FILE,
+            # 不恢复 settings.json，避免覆盖当前管理员密码
+        }
+
+        restored = []
+        for name, dst in files_to_restore.items():
+            src = os.path.join(restore_path, name)
+            if os.path.exists(src):
+                with open(src, 'r', encoding='utf-8') as f_in:
+                    data = json.load(f_in)
+                with open(dst, 'w', encoding='utf-8') as f_out:
+                    json.dump(data, f_out, ensure_ascii=False, indent=2)
+                restored.append(name)
+                print(f'♻️ [恢复] {name} 已恢复')
+
+        print(f'♻️ [恢复完成] 从 {backup_id}')
+        return jsonify({'code': 0, 'message': '恢复成功', 'data': {'restored': restored}})
+    except Exception as e:
+        print(f'❌ [恢复备份异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'恢复失败: {str(e)}'})
+
+@app.route('/api/admin/backup/delete/<backup_id>', methods=['DELETE'])
+def admin_delete_backup(backup_id):
+    """刪除指定备份"""
+    try:
+        backup_path = os.path.join(BACKUP_DIR, backup_id)
+        if not os.path.isdir(backup_path):
+            return jsonify({'code': 404, 'message': f'备份不存在: {backup_id}'})
+
+        shutil.rmtree(backup_path)
+        print(f'🗑️ [删除备份] {backup_id} 已删除')
+        return jsonify({'code': 0, 'message': '备份已删除'})
+    except Exception as e:
+        print(f'❌ [删除备份异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'删除备份失败: {str(e)}'})
+
+@app.route('/api/admin/factory-reset', methods=['POST'])
+def admin_factory_reset():
+    """恢复出厂设置：清空所有数据并重置管理员"""
+    try:
+        # 清空所有数据文件
+        write_json(USERS_FILE, [])
+        write_json(BILLS_FILE, [])
+        write_json(CLAIMS_FILE, [])
+        write_json(SETTINGS_FILE, {})
+        print('🗑️ [管理员] 已执行恢复出厂设置')
+        return jsonify({'code': 0, 'message': '已恢复出厂设置，所有数据已清除，管理员账号需要重新设置'})
+    except Exception as e:
+        print(f'❌ [恢复出厂设置异常] {e}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({'code': 5000, 'message': f'恢复出厂设置失败: {str(e)}'})
 
 @app.route('/api/admin/reset', methods=['POST'])
 def admin_reset_all():
@@ -1114,6 +1600,82 @@ def serve_static(path):
         return jsonify({'code': 5000, 'message': f'无法加载静态文件: {str(e)}'}), 500
 
 # ================================================================
+# 14.5 服务控制台 — 查看服务器日志与运行状态
+# ================================================================
+
+@app.route('/api/admin/server-logs')
+def admin_server_logs():
+    """返回服务器日志文件内容（最近100行）"""
+    try:
+        if not os.path.exists(LOG_FILE):
+            return jsonify({'code': 0, 'data': {'lines': [], 'total': 0}})
+        with open(LOG_FILE, 'r', encoding='utf-8') as f:
+            all_lines = f.readlines()
+        # 返回最近 200 行
+        recent = all_lines[-200:]
+        return jsonify({
+            'code': 0,
+            'data': {
+                'lines': recent,
+                'total': len(all_lines),
+                'showing': len(recent)
+            }
+        })
+    except Exception as e:
+        print(f'❌ [日志读取异常] {e}')
+        return jsonify({'code': 5000, 'message': f'读取日志失败: {str(e)}'})
+
+@app.route('/api/admin/server-status')
+def admin_server_status():
+    """返回服务器运行状态信息"""
+    try:
+        import platform
+        import psutil
+        process = psutil.Process()
+        mem = process.memory_info()
+        uptime_seconds = int((datetime.now() - datetime.fromtimestamp(process.create_time())).total_seconds())
+        hours, remainder = divmod(uptime_seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return jsonify({
+            'code': 0,
+            'data': {
+                'pid': process.pid,
+                'uptime': f'{hours}时{minutes}分{seconds}秒',
+                'memory_mb': f'{mem.rss / 1024 / 1024:.1f}',
+                'cpu_percent': process.cpu_percent(interval=0.1),
+                'python_version': sys.version,
+                'platform': platform.platform(),
+                'host': 'http://localhost:3000',
+                'log_file': LOG_FILE
+            }
+        })
+    except ImportError:
+        # psutil 可能未安装，返回基本信息
+        return jsonify({
+            'code': 0,
+            'data': {
+                'pid': os.getpid(),
+                'uptime': '未知（请安装 psutil 获取详情）',
+                'python_version': sys.version,
+                'host': 'http://localhost:3000'
+            }
+        })
+    except Exception as e:
+        print(f'❌ [状态查询异常] {e}')
+        return jsonify({'code': 5000, 'message': f'获取状态失败: {str(e)}'})
+
+@app.route('/admin/console')
+def serve_server_console():
+    """提供服务控制台页面"""
+    try:
+        return send_from_directory(BASE_DIR, 'server-console.html')
+    except FileNotFoundError:
+        return jsonify({'code': 5004, 'message': '控制台页面不存在'}), 500
+    except Exception as e:
+        print(f'❌ [控制台页面服务异常] {e}')
+        return jsonify({'code': 5000, 'message': f'无法加载控制台页面: {str(e)}'}), 500
+
+# ================================================================
 # 15. 启动服务
 # ================================================================
 if __name__ == '__main__':
@@ -1125,11 +1687,12 @@ if __name__ == '__main__':
     print(f'📂 用户数据: {USERS_FILE}')
     print(f'📂 账单数据: {BILLS_FILE}')
     print(f'📂 认领数据: {CLAIMS_FILE}')
-    print(f'� 访问地址: http://localhost:3000')
+    print(f'📂 配置数据: {SETTINGS_FILE}')
+    print(f'📂 备份目录: {BACKUP_DIR}')
+    print(f'🌐 访问地址: http://localhost:3000')
     print(f'🔗 账号管理: http://localhost:3000/admin/accounts')
-    print(f'👤 默认账号: chaibingkun')
-    print(f'🔑 默认密码: cbk4679585858')
-    print(f'📋 更多账号见: {USERS_FILE}')
+    print(f'👤 管理员: 首次访问 /admin/accounts 时设置')
+    print(f'📋 家庭成员账号见: {USERS_FILE}')
     print('=' * 50)
     
     # 启动前检查
@@ -1147,4 +1710,4 @@ if __name__ == '__main__':
     print('🚀 服务启动中...')
     print('按 Ctrl+C 停止服务')
     print('')
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=False)

@@ -7,31 +7,42 @@
 ```
 family-money/
 │
-├── frontend/                      # 前端静态文件
-│   └── index.html                 # 主应用（SPA单页应用）
+├── frontend/                       # 前端静态文件
+│   └── index.html                  # 主应用（SPA单页应用）
 │
-├── backend/                       # 后端服务
-│   ├── app.py                     # Flask 服务入口（全部API在此实现）
-│   ├── account-manager.html       # 后端账号管理页面（管理员专用）
-│   ├── requirements.txt           # Python 依赖清单
-│   ├── users.json                 # 用户数据（自动生成）
-│   ├── bills.json                 # 账单数据（自动生成）
-│   └── claims.json                # 认领数据（自动生成）
+├── backend/                        # 后端服务
+│   ├── app.py                      # Flask 服务入口（全部API在此实现，约1500行）
+│   ├── account-manager.html        # 后端账号管理+账单管理页面（管理员专用）
+│   ├── requirements.txt            # Python 依赖清单
+│   ├── settings.json               # 管理员配置（自动生成）
+│   ├── users.json                  # 用户数据（自动生成）
+│   ├── bills.json                  # 账单数据（自动生成）
+│   ├── claims.json                 # 认领数据（自动生成）
+│   ├── backups/                    # 数据备份目录（自动生成）
+│   └── *.bak                       # 自动备份文件（.gitignore忽略）
 │
-├── docs/                          # 项目文档
-│   ├── 接口文档.txt               # ← 本文档
-│   └── index快速导览.txt          # 前端代码行号导航
+├── docs/                           # 项目文档
+│   ├── 接口文档.txt                # ← 本文档
+│   └── index快速导览.txt           # 前端代码行号导航
 │
-├── 快捷工具/                      # 快捷启动工具
-│   ├── start.bat                  # 启动后端服务
-│   ├── close.bat                  # 停止后端服务
-│   ├── 首页 - 家庭报销管家.lnk    # 首页快捷方式
-│   └── 后台管理 - 账号管理.lnk    # 后台管理快捷方式
+├── 快捷工具/                       # 快捷启动工具
+│   ├── start.bat                   # 启动后端服务
+│   ├── close.bat                   # 停止后端服务
+│   ├── start_backend.vbs           # 静默启动脚本
+│   ├── 首页 - 家庭报销管家.lnk     # 首页快捷方式
+│   └── 后台管理 - 账号管理.lnk     # 后台管理快捷方式
 │
-├── .gitignore                     # Git 忽略规则
-├── .venv/                         # Python 虚拟环境
-└── README.md                      # 项目说明
+├── .gitignore                      # Git 忽略规则
+├── .venv/                          # Python 虚拟环境
+└── README.md                       # 项目说明
 ```
+
+> **⚠️ 后端架构更新**（最近更新）：
+> - **管理员独立**：`chaibingkun` 仅用于后台登录（`is_admin:true`），不出现在前端家庭成员列表中
+> - **备份系统**：支持全量数据备份创建、恢复、删除，备份存储在 `backend/backups/` 目录
+> - **恢复出厂设置**：清空所有数据（账单、认领、用户、管理员），需重新设置
+> - **备份恢复不覆盖管理员密码**：`settings.json` 在恢复时被排除，密码始终保留
+> - **账单管理后台**：管理员可在账号管理页面直接编辑/删除账单及认领记录
 
 ---
 
@@ -729,6 +740,362 @@ Flask 后端同时作为静态文件服务器，提供前端页面和后端管�
 
 ---
 
+### 接口20~23：备份系统（创建 / 列表 / 恢复 / 删除）
+
+#### 20. 创建备份
+
+```
+POST /api/admin/backup
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "备份成功",
+    "data": {
+        "path": "backup_20260727_155147",
+        "files": {
+            "users.json": "ok",
+            "bills.json": "ok",
+            "claims.json": "ok",
+            "settings.json": "ok"
+        }
+    }
+}
+```
+
+备份存储在 `backend/backups/backup_{时间戳}/` 目录下，每个备份包含 `manifest.json` 清单。
+
+#### 21. 列出所有备份
+
+```
+GET /api/admin/backups
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": [
+        {
+            "id": "backup_20260727_155147",
+            "name": "backup_20260727_155147",
+            "created_at": "20260727_155147",
+            "files": {
+                "users.json": "ok",
+                "bills.json": "ok",
+                "claims.json": "ok",
+                "settings.json": "ok"
+            }
+        }
+    ]
+}
+```
+
+#### 22. 恢复备份
+
+```
+POST /api/admin/backup/restore/{backup_id}
+Authorization: Bearer {token}
+```
+
+> ⚠️ **注意**：恢复备份时不会覆盖 `settings.json`（管理员配置），避免当前管理员密码被覆盖。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "恢复成功",
+    "data": {
+        "restored": ["users.json", "bills.json", "claims.json"]
+    }
+}
+```
+
+#### 23. 删除备份
+
+```
+DELETE /api/admin/backup/delete/{backup_id}
+Authorization: Bearer {token}
+```
+
+从磁盘物理删除备份目录。需要确认弹窗提醒。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "备份已删除"
+}
+```
+
+---
+
+### 接口24~26：管理员身份验证与设置
+
+#### 24. 检查是否已设置管理员
+
+```
+GET /api/admin/check-setup
+```
+
+无需token，用于页面加载时判断显示首次设置界面还是登录界面。
+
+**响应（已配置）**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "configured": true
+    }
+}
+```
+
+**响应（未配置）**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": {
+        "configured": false
+    }
+}
+```
+
+#### 25. 首次设置管理员
+
+```
+POST /api/admin/setup
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "chaibingkun",
+    "password": "cbk4679585858"
+}
+```
+
+仅在未配置时可用，设置管理员账号密码。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "管理员设置成功",
+    "data": {
+        "token": "a1b2c3d4-..."
+    }
+}
+```
+
+#### 26. 管理员登录
+
+```
+POST /api/admin/login
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "chaibingkun",
+    "password": "cbk4679585858"
+}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "登录成功",
+    "data": {
+        "token": "a1b2c3d4-...",
+        "username": "chaibingkun"
+    }
+}
+```
+
+---
+
+### 接口27~29：账单管理（编辑 / 删除 / 查看认领）
+
+#### 27. 编辑账单
+
+```
+PUT /api/admin/bills/{bill_id}
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "title": "新的账单标题",
+    "total_amount": 300,
+    "purchaser_id": 1
+}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "账单已更新"
+}
+```
+
+#### 28. 删除账单（含其所有认领记录）
+
+```
+DELETE /api/admin/bills/{bill_id}
+Authorization: Bearer {token}
+```
+
+级联删除该账单的所有认领记录。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "账单已删除",
+    "data": {
+        "deleted_claims": 3
+    }
+}
+```
+
+#### 29. 获取账单的认领记录
+
+```
+GET /api/admin/bills/{bill_id}/claims
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "success",
+    "data": [
+        {
+            "id": 1,
+            "bill_id": 1,
+            "claimant_id": 2,
+            "claimant_name": "妈妈",
+            "amount": 30,
+            "status": "pending",
+            "created_at": "2026-07-20 11:00:00"
+        }
+    ]
+}
+```
+
+---
+
+### 接口30~31：认领管理（编辑 / 删除）
+
+#### 30. 编辑认领记录
+
+```
+PUT /api/admin/claims/{claim_id}
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+```json
+{
+    "claimant_id": 2,
+    "amount": 50
+}
+```
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "认领记录已更新"
+}
+```
+
+#### 31. 删除认领记录
+
+```
+DELETE /api/admin/claims/{claim_id}
+Authorization: Bearer {token}
+```
+
+删除单条认领记录，自动更新对应账单的状态（若认领已满则回退）。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "认领记录已删除",
+    "data": {
+        "bill_status": "pending"
+    }
+}
+```
+
+---
+
+### 接口32~33：危险操作
+
+#### 32. 重置全部账单
+
+```
+POST /api/admin/reset
+Authorization: Bearer {token}
+```
+
+清空所有账单和认领数据。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "已清空全部账单和认领数据"
+}
+```
+
+#### 33. 恢复出厂设置
+
+```
+POST /api/admin/factory-reset
+Authorization: Bearer {token}
+```
+
+清空所有数据（users/bills/claims/settings），需重新设置管理员。
+
+**响应**
+
+```json
+{
+    "code": 0,
+    "message": "已恢复出厂设置，所有数据已清除，管理员账号需要重新设置"
+}
+```
+
+---
+
 ## 三、后端实现说明（当前：Flask + JSON）
 
 ### 技术选型
@@ -745,11 +1112,13 @@ Flask 后端同时作为静态文件服务器，提供前端页面和后端管�
 
 | 文件 | 说明 |
 |------|------|
-| `backend/app.py` | **单文件实现全部 19 个接口**，约 600 行 |
+| `backend/app.py` | **单文件实现全部 30+ 个接口**，约 1500 行 |
 | `backend/requirements.txt` | 仅依赖 `flask` + `flask-cors` |
+| `backend/settings.json` | 管理员配置，首次设置后自动生成 |
 | `backend/users.json` | 用户数据，首次启动自动生成预设账号 |
 | `backend/bills.json` | 账单数据，初始为空 |
 | `backend/claims.json` | 认领记录数据，初始为空 |
+| `backend/backups/` | 自动备份目录，含 manifest.json 清单 |
 
 ### 与原始设计文档的差异
 
@@ -759,7 +1128,7 @@ Flask 后端同时作为静态文件服务器，提供前端页面和后端管�
 | JWT Bearer Token | UUID 简单 Token |
 | bcrypt 密码加密 | 明文密码 |
 | 模块化 routers/ 目录 | 单文件 app.py |
-| 14 个接口 | 19 个接口（含账号管理 CRUD） |
+| 14 个接口 | **30+ 个接口**（含账号管理 CRUD、备份系统、账单管理、出厂重置等） |
 
 ---
 
@@ -871,9 +1240,11 @@ python app.py
 | 文件 | 用途 |
 |------|------|
 | `frontend/index.html` | 完整前端，含登录页 + 全部功能页面（仪表盘/账单/查账/激励榜/管理） |
-| `backend/account-manager.html` | 后端账号管理页面（添加/编辑/删除成员，管理员专用） |
-| `backend/app.py` | Flask 后端服务，实现全部 19 个 API 接口 |
+| `backend/account-manager.html` | 后端管理页面（账号管理 + 备份系统 + 账单管理 + 危险操作，管理员专用） |
+| `backend/app.py` | Flask 后端服务，实现全部 **33 个** API 接口（约 1500 行） |
 | `backend/requirements.txt` | Python 依赖清单 |
+| `backend/settings.json` | 管理员配置（账号密码，自动生成） |
 | `backend/*.json` | JSON 数据文件（users/bills/claims，自动生成） |
+| `backend/backups/` | 数据备份目录，内含 manifest.json 清单 |
 | `docs/接口文档.txt` | ← 本文档 |
 | `docs/index快速导览.txt` | 前端代码行号快速定位指南 |

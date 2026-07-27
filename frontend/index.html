@@ -789,6 +789,28 @@
         </div>
     </div>
 
+    <!-- ===== 修改承诺上限弹窗 ===== -->
+    <div class="modal-overlay" id="editCommitmentOverlay" style="display:none;">
+        <div class="modal-box" style="max-width:400px;">
+            <h3>✏️ 修改承诺上限</h3>
+            <div style="padding:16px 0;">
+                <div style="margin-bottom:12px;font-size:14px;color:#666;">
+                    当前上限：<strong id="editCommitCurrent" style="color:#333;">0</strong> 元 &nbsp;|&nbsp;
+                    已认领：<strong id="editCommitUsed" style="color:#e74c3c;">0</strong> 元
+                </div>
+                <div style="margin-bottom:8px;font-size:13px;color:#333;">新上限金额（仅可调高）</div>
+                <input type="number" id="editCommitInput" placeholder="请输入新的承诺上限" step="1" min="0"
+                    style="width:100%;padding:12px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;"
+                    onfocus="this.style.borderColor='#4a6cf7'" onblur="this.style.borderColor='#d0d5dd'" />
+                <div id="editCommitError" style="color:#e74c3c;font-size:13px;margin-top:6px;display:none;"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-sm" onclick="closeEditCommitment()">取消</button>
+                <button class="btn btn-primary btn-sm" id="editCommitBtn" onclick="confirmEditCommitment()">确认修改</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== Toast 容器 ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
@@ -891,7 +913,7 @@
                     <span class="card-title">🧑 我的速览</span>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px;">
-                    <div><strong>承诺总额</strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
+                    <div><strong>承诺总额 <span id="editCommitBtn" onclick="showEditCommitment()" style="cursor:pointer;font-size:13px;color:#4a6cf7;" title="修改承诺上限">✏️</span></strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
                     <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
                     <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
                     <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
@@ -1749,6 +1771,9 @@
                 // 保存登录状态
                 saveAuth(token, { user_id, username, name, role, is_admin, max_commitment });
                 currentUser = { id: user_id, name, role, is_admin };
+                // 管理员无个人承诺上限，隐藏编辑按钮
+                const editBtn = document.getElementById('editCommitBtn');
+                if (editBtn) editBtn.style.display = currentUser.is_admin || currentUser.id === -1 ? 'none' : '';
                 updatePurchaserSelect();
 
                 // 记住密码 / 自动登录 处理
@@ -1808,6 +1833,8 @@
             const user = getStoredUser();
             if (token && user) {
                 currentUser = { id: user.user_id, name: user.name, role: user.role, is_admin: user.is_admin };
+                const editBtn = document.getElementById('editCommitBtn');
+                if (editBtn) editBtn.style.display = currentUser.is_admin || currentUser.id === -1 ? 'none' : '';
                 updatePurchaserSelect();
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
@@ -1909,6 +1936,107 @@
 
             } catch (e) {
                 console.error(`❌ [仪表盘渲染] 加载仪表盘数据失败:`, e);
+            }
+        }
+
+        // ===== 修改承诺上限相关 =====
+
+        /** 当前用户承诺数据（从 API 实时获取） */
+        let _editCommitData = null;
+
+        /** 打开修改承诺上限弹窗 */
+        async function showEditCommitment() {
+            // 管理员账号没有个人承诺上限，禁止操作
+            if (currentUser.is_admin || currentUser.id === -1) {
+                showToast('管理员账号无需设置个人承诺上限', 'warning');
+                return;
+            }
+            try {
+                const resp = await callAPI('/dashboard?user_id=' + currentUser.id);
+                _editCommitData = resp.data.currentUser;
+                if (!_editCommitData) return;
+
+                const $ = id => document.getElementById(id);
+                const setText = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+
+                setText('editCommitCurrent', _editCommitData.max_commitment.toFixed(0));
+                setText('editCommitUsed', _editCommitData.used.toFixed(0));
+
+                const inp = $('editCommitInput');
+                if (inp) inp.value = '';
+
+                const err = $('editCommitError');
+                if (err) err.style.display = 'none';
+
+                const ov = $('editCommitmentOverlay');
+                if (ov) ov.style.display = 'flex';
+
+                if (inp) inp.focus();
+            } catch (e) {
+                console.error('❌ [打开修改弹窗]', e);
+            }
+        }
+
+        /** 关闭弹窗 */
+        function closeEditCommitment() {
+            const el = document.getElementById('editCommitmentOverlay');
+            if (el) el.style.display = 'none';
+        }
+
+        /** 确认修改 */
+        async function confirmEditCommitment() {
+            const $ = id => document.getElementById(id);
+            const input = $('editCommitInput');
+            const errEl = $('editCommitError');
+            if (!input || !errEl || !_editCommitData) return;
+
+            const newVal = parseFloat(input.value);
+
+            if (isNaN(newVal) || newVal < 0) {
+                errEl.textContent = '请输入有效的正数金额';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            if (newVal < _editCommitData.used) {
+                errEl.textContent = `新上限不能低于已认领金额 ${_editCommitData.used.toFixed(0)} 元`;
+                errEl.style.display = 'block';
+                return;
+            }
+            if (newVal <= _editCommitData.max_commitment) {
+                errEl.textContent = `新上限必须高于当前上限 ${_editCommitData.max_commitment.toFixed(0)} 元`;
+                errEl.style.display = 'block';
+                return;
+            }
+
+            errEl.style.display = 'none';
+
+            const btn = $('editCommitBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '修改中...'; }
+
+            try {
+                const resp = await callAPI('/user/commitment', {
+                    method: 'PUT',
+                    body: {
+                        user_id: currentUser.id,
+                        max_commitment: newVal
+                    }
+                });
+                if (resp.code === 0) {
+                    showToast(resp.message || '修改成功', 'success');
+                    closeEditCommitment();
+                    await renderDashboard();
+                } else {
+                    errEl.textContent = resp.message || '修改失败';
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                errEl.textContent = '网络错误，请稍后重试';
+                errEl.style.display = 'block';
+                console.error('❌ [修改承诺上限]', e);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '确认修改';
             }
         }
 

@@ -1,0 +1,15 @@
+=== 服务启动于 2026-07-27 18:23:36 ===
+[18:23:36] 📂 [数据检查] 用户文件: D:\桌面文件\GitHub\family-money\backend\users.json[18:23:36] 📂 [数据检查] 账单文件: D:\桌面文件\GitHub\family-money\backend\bills.json[18:23:36] 📂 [数据检查] 认领文件: D:\桌面文件\GitHub\family-money\backend\claims.json[18:23:36] 📂 [前端目录] D:\桌面文件\GitHub\family-money\backend\..\frontend[18:23:36] ==================================================[18:23:36] 🏠 家庭报销管理系统 后端服务[18:23:36] ==================================================[18:23:36] 📂 后端目录: D:\桌面文件\GitHub\family-money\backend[18:23:36] 📂 前端目录: D:\桌面文件\GitHub\family-money\backend\..\frontend[18:23:36] 📂 用户数据: D:\桌面文件\GitHub\family-money\backend\users.json[18:23:36] 📂 账单数据: D:\桌面文件\GitHub\family-money\backend\bills.json[18:23:36] 📂 认领数据: D:\桌面文件\GitHub\family-money\backend\claims.json[18:23:36] 📂 配置数据: D:\桌面文件\GitHub\family-money\backend\settings.json[18:23:36] 📂 备份目录: D:\桌面文件\GitHub\family-money\backend\backups[18:23:36] 🌐 访问地址: http://localhost:3000[18:23:36] 🔗 账号管理: http://localhost:3000/admin/accounts[18:23:36] 👤 管理员: 首次访问 /admin/accounts 时设置[18:23:36] 📋 家庭成员账号见: D:\桌面文件\GitHub\family-money\backend\users.json[18:23:36] ==================================================[18:23:36] 🚀 服务启动中...[18:23:36] 按 Ctrl+C 停止服务[18:23:36]  * Serving Flask app 'app'
+[18:23:36]  * Debug mode: off
+[18:23:36] WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[18:23:36] 
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+ * Running on http://192.168.1.2:3000
+[18:23:36] Press CTRL+C to quit[18:23:55] 127.0.0.1 - - [27/Jul/2026 18:23:55] "[18:23:55] GET /admin/accounts HTTP/1.1[18:23:55] " 304 -
+[18:23:55] 127.0.0.1 - - [27/Jul/2026 18:23:55] "GET /api/admin/check-setup HTTP/1.1" 200 -
+[18:23:55] 127.0.0.1 - - [27/Jul/2026 18:23:55] "GET /api/admin/users HTTP/1.1" 200 -
+[18:23:56] 127.0.0.1 - - [27/Jul/2026 18:23:56] "GET /api/admin/bills HTTP/1.1" 200 -
+[18:23:56] 127.0.0.1 - - [27/Jul/2026 18:23:56] "GET /api/admin/users HTTP/1.1" 200 -
+[18:23:56] 127.0.0.1 - - [27/Jul/2026 18:23:56] "GET /api/admin/backups HTTP/1.1" 200 -
+[18:23:56] 127.0.0.1 - - [27/Jul/2026 18:23:56] "GET /api/admin/bills/1/claims HTTP/1.1" 200 -
+[18:23:59] 🗑️ [管理员] 已执行恢复出厂设置[18:23:59] 127.0.0.1 - - [27/Jul/2026 18:23:59] "POST /api/admin/factory-reset HTTP/1.1" 200 -
