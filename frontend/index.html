@@ -5,17 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>家庭报销管理系统</title>
     <style>
+        /* ================================================================
+           家庭报销管家 · 视觉重构
+           主题：家庭账本 —— 墨绿封皮 · 暖纸内页 · 金色饰线
+           功能与结构保持不变，仅重构视觉层
+           ================================================================ */
+        :root {
+            --paper: #F5F0E7;
+            --card: #FFFDF8;
+            --ink: #2B3831;
+            --ink-soft: #5E6B64;
+            --ink-faint: #96A099;
+            --pine: #3A5A4C;
+            --pine-deep: #2C4438;
+            --pine-soft: #E7EEE8;
+            --gold: #B98A3E;
+            --gold-soft: #F4EAD8;
+            --line: #E7DFCE;
+            --line-strong: #D8CDB4;
+            --danger: #D9554B;
+            --danger-soft: #F9ECEA;
+            --success: #3FA564;
+            --success-soft: #E9F3EC;
+            --warning: #D98A2E;
+            --warning-soft: #F9F0E2;
+            --info: #4A7CA6;
+            --info-soft: #E9F0F6;
+            --shadow-sm: 0 1px 2px rgba(43, 56, 49, .06), 0 4px 12px rgba(43, 56, 49, .05);
+            --shadow-md: 0 2px 6px rgba(43, 56, 49, .08), 0 12px 28px rgba(43, 56, 49, .10);
+            --shadow-lg: 0 8px 24px rgba(43, 56, 49, .12), 0 24px 60px rgba(43, 56, 49, .16);
+            --radius: 14px;
+            --radius-lg: 20px;
+        }
+
         /* ========== 全局重置 ========== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f0f2f5;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+            background:
+                radial-gradient(1100px 500px at 85% -10%, rgba(185, 138, 62, 0.09), transparent 60%),
+                radial-gradient(900px 420px at -10% 110%, rgba(58, 90, 76, 0.08), transparent 55%),
+                var(--paper);
+            color: var(--ink);
             min-height: 100vh;
+            line-height: 1.55;
+            font-variant-numeric: tabular-nums;
+        }
+        ::selection {
+            background: var(--gold);
+            color: #fff;
+        }
+        :focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
         }
 
         /* ========== 登录页面 ========== */
@@ -24,62 +73,87 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #4a6cf7, #6a3de8);
+            padding: 24px;
+            background:
+                radial-gradient(700px 500px at 20% 15%, rgba(185, 138, 62, 0.14), transparent 60%),
+                radial-gradient(800px 600px at 85% 85%, rgba(58, 90, 76, 0.12), transparent 55%),
+                linear-gradient(160deg, #EDE6D6, #F5F0E7 55%, #EFE9DA);
         }
         .login-box {
-            background: #fff;
-            padding: 48px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            background: var(--card);
+            padding: 52px 44px 40px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-lg);
             width: 400px;
-            max-width: 92%;
+            max-width: 94%;
+            overflow: hidden;
+        }
+        /* 账页折角 —— 签名元素 */
+        .login-box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(225deg, transparent 50%, rgba(185, 138, 62, 0.30) 50%);
+            border-bottom-left-radius: 12px;
         }
         .login-box .logo {
             text-align: center;
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--pine-deep);
             margin-bottom: 6px;
         }
         .login-box .subtitle {
             text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 28px;
+            color: var(--ink-faint);
+            font-size: 13px;
+            letter-spacing: 4px;
+            margin-bottom: 30px;
         }
         .login-box .form-group {
             margin-bottom: 18px;
         }
         .login-box .form-group label {
             display: block;
-            font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #555;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--ink-soft);
+            letter-spacing: 1px;
         }
         .login-box .form-group input {
             width: 100%;
             padding: 12px 16px;
-            border: 1.5px solid #d0d5dd;
+            border: 1.5px solid var(--line-strong);
             border-radius: 10px;
             font-size: 15px;
-            transition: border 0.2s;
+            background: #FBF8F1;
+            color: var(--ink);
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
         }
         .login-box .form-group input:focus {
             outline: none;
-            border-color: #4a6cf7;
-            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.12);
+            border-color: var(--pine);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(58, 90, 76, 0.14);
         }
         .login-box .login-options {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
         .login-box .login-option {
             display: flex;
             align-items: center;
             gap: 6px;
             font-size: 13px;
-            color: #666;
+            color: var(--ink-soft);
             cursor: pointer;
             user-select: none;
         }
@@ -87,103 +161,130 @@
             width: 15px;
             height: 15px;
             cursor: pointer;
-            accent-color: #4a6cf7;
+            accent-color: var(--pine);
         }
         .login-box .btn-login {
             width: 100%;
             padding: 13px;
             border: none;
             border-radius: 10px;
-            background: #4a6cf7;
+            background: linear-gradient(135deg, var(--pine), var(--pine-deep));
             color: #fff;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 10px;
+            text-indent: 10px;
             cursor: pointer;
             transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(44, 68, 56, 0.25);
         }
         .login-box .btn-login:hover {
-            background: #3a5cd6;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(74, 108, 247, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(44, 68, 56, 0.32);
+        }
+        .login-box .btn-login:active {
+            transform: translateY(0);
         }
         .login-box .demo-hint {
             text-align: center;
-            margin-top: 16px;
-            font-size: 13px;
-            color: #aaa;
+            margin-top: 18px;
+            font-size: 12px;
+            color: var(--ink-faint);
         }
         .login-box .demo-hint code {
-            background: #f0f2f5;
+            background: var(--pine-soft);
             padding: 2px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 12px;
-            color: #4a6cf7;
+            color: var(--pine);
         }
 
         /* ========== 主应用容器 ========== */
         #appContainer {
             display: none;
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
+            background: transparent;
             min-height: 100vh;
         }
 
         /* ========== 顶部导航 ========== */
         .navbar {
-            background: linear-gradient(135deg, #4a6cf7, #6a3de8);
-            padding: 14px 28px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(135deg, var(--pine-deep), var(--pine));
+            padding: 14px 26px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
+            border-bottom: 3px solid var(--gold);
+            box-shadow: 0 2px 10px rgba(43, 56, 49, 0.18);
         }
         .navbar-brand {
-            color: #fff;
-            font-size: 19px;
-            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #FDFBF5;
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        /* 品牌金色徽章 —— 签名元素 */
+        .navbar-brand::before {
+            content: "🏠";
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D9AC5C, var(--gold));
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+            font-size: 17px;
         }
         .navbar-brand span {
-            opacity: 0.7;
+            opacity: 0.72;
             font-weight: 400;
-            font-size: 13px;
-            margin-left: 8px;
+            font-size: 12px;
+            margin-left: 6px;
+            letter-spacing: 1px;
         }
         .navbar-right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
             flex-wrap: wrap;
         }
         .navbar-user {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(253, 251, 245, 0.92);
             font-size: 14px;
             font-weight: 500;
         }
         .navbar-user .role-badge {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(217, 172, 92, 0.22);
+            border: 1px solid rgba(217, 172, 92, 0.4);
             padding: 2px 12px;
             border-radius: 20px;
             font-size: 12px;
-            margin-left: 6px;
+            margin-left: 8px;
+            color: #F3DFB8;
         }
         .btn-logout {
-            padding: 6px 18px;
-            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            padding: 6px 16px;
+            border: 1.5px solid rgba(253, 251, 245, 0.35);
             background: transparent;
-            color: #fff;
+            color: #FDFBF5;
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
             transition: all 0.2s;
         }
         .btn-logout:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #fff;
+            background: rgba(253, 251, 245, 0.14);
+            border-color: #FDFBF5;
         }
 
         .nav-tabs {
@@ -192,30 +293,42 @@
             flex-wrap: wrap;
         }
         .nav-tab {
-            padding: 7px 16px;
+            position: relative;
+            padding: 8px 16px;
             border: none;
-            background: rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.75);
+            background: transparent;
+            color: rgba(253, 251, 245, 0.7);
             border-radius: 8px;
             cursor: pointer;
             font-size: 13px;
             font-weight: 500;
+            letter-spacing: 1px;
             transition: all 0.25s;
         }
         .nav-tab:hover {
-            background: rgba(255, 255, 255, 0.22);
-            color: #fff;
+            background: rgba(253, 251, 245, 0.1);
+            color: #FDFBF5;
         }
         .nav-tab.active {
-            background: #fff;
-            color: #4a6cf7;
+            background: rgba(253, 251, 245, 0.14);
+            color: #FDFBF5;
+        }
+        .nav-tab.active::after {
+            content: "";
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 2px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--gold);
         }
 
         /* ========== 页面容器 ========== */
         .page {
             display: none;
-            padding: 24px 28px 32px;
-            animation: fadeIn 0.3s ease;
+            padding: 26px 28px 44px;
+            animation: fadeIn 0.35s ease;
         }
         .page.active {
             display: block;
@@ -223,7 +336,7 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(8px);
+                transform: translateY(10px);
             }
             to {
                 opacity: 1;
@@ -232,75 +345,96 @@
         }
 
         .page-title {
-            font-size: 21px;
-            font-weight: 700;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1px;
             margin-bottom: 4px;
+            color: var(--pine-deep);
         }
         .page-subtitle {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 22px;
+            color: var(--ink-faint);
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--line);
         }
 
         /* ========== 卡片 ========== */
         .card {
-            background: #f8f9fc;
-            border-radius: 12px;
+            background: var(--card);
+            border-radius: var(--radius);
             padding: 18px 22px;
             margin-bottom: 14px;
-            border: 1px solid #e8ecf1;
-            transition: box-shadow 0.2s;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s, transform 0.2s;
         }
         .card:hover {
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            box-shadow: var(--shadow-md);
         }
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
             gap: 6px;
         }
         .card-title {
+            position: relative;
             font-size: 15px;
-            font-weight: 600;
+            font-weight: 700;
+            padding-left: 12px;
+            color: var(--pine-deep);
+        }
+        /* 金色饰线 —— 签名元素 */
+        .card-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 3px;
+            bottom: 3px;
+            width: 4px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, var(--gold), #D9AC5C);
         }
         .card-badge {
             padding: 3px 12px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
         .badge-pending {
-            background: #fff3e0;
-            color: #e67e22;
+            background: var(--warning-soft);
+            color: #A96A1E;
         }
         .badge-claiming {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: var(--info-soft);
+            color: #3E6E96;
         }
         .badge-transferring {
-            background: #fce4ec;
-            color: #c62828;
+            background: var(--danger-soft);
+            color: #A94F4A;
         }
         .badge-settled {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: var(--success-soft);
+            color: #3D6B4F;
         }
 
         /* ========== 状态筛选标签 ========== */
         .filter-tabs {
             display: flex;
-            gap: 4px;
+            gap: 6px;
             flex-wrap: wrap;
             margin-bottom: 14px;
         }
         .filter-tab {
             padding: 5px 14px;
-            border: 1px solid #e0e0e0;
-            background: #fff;
-            color: #666;
+            border: 1px solid var(--line-strong);
+            background: var(--card);
+            color: var(--ink-soft);
             border-radius: 16px;
             cursor: pointer;
             font-size: 12px;
@@ -308,20 +442,20 @@
             transition: all 0.2s;
         }
         .filter-tab:hover {
-            background: #f5f5f5;
-            border-color: #bbb;
+            border-color: var(--gold);
+            color: var(--pine);
         }
         .filter-tab.active {
-            background: #4a6cf7;
+            background: var(--pine);
             color: #fff;
-            border-color: #4a6cf7;
+            border-color: var(--pine);
         }
 
         /* ========== 认领人列表 ========== */
         .claimant-list {
             margin-top: 8px;
             padding-top: 8px;
-            border-top: 1px solid #e8ecf1;
+            border-top: 1px dashed var(--line);
             font-size: 13px;
         }
         .claimant-item {
@@ -329,48 +463,65 @@
             justify-content: space-between;
             align-items: center;
             padding: 3px 0;
-            color: #555;
+            color: var(--ink-soft);
         }
         .claimant-item .amount-tag {
-            font-weight: 600;
+            font-weight: 700;
+            color: var(--ink);
         }
         .claimant-payer-confirmed {
-            color: #2ecc71;
+            color: var(--success);
             font-size: 11px;
         }
 
         /* ========== 统计卡片 ========== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 14px;
             margin-bottom: 22px;
         }
         .stat-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px 18px;
-            border: 1px solid #e8ecf1;
+            position: relative;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px 18px 16px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
             text-align: center;
+            overflow: hidden;
+        }
+        /* 顶部金色饰线 —— 签名元素 */
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 18px;
+            right: 18px;
+            height: 3px;
+            border-radius: 0 0 3px 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
         }
         .stat-number {
-            font-size: 26px;
-            font-weight: 700;
-            color: #4a6cf7;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--pine);
+            letter-spacing: 0.5px;
         }
         .stat-number.danger {
-            color: #e74c3c;
+            color: var(--danger);
         }
         .stat-number.success {
-            color: #2ecc71;
+            color: var(--success);
         }
         .stat-number.warning {
-            color: #f39c12;
+            color: var(--warning);
         }
         .stat-label {
-            font-size: 13px;
-            color: #888;
-            margin-top: 3px;
+            font-size: 12.5px;
+            color: var(--ink-faint);
+            margin-top: 4px;
+            letter-spacing: 1px;
         }
 
         /* ========== 成员基金池 ========== */
@@ -381,47 +532,57 @@
             margin-bottom: 22px;
         }
         .member-pool-card {
-            background: #fff;
-            border-radius: 10px;
-            padding: 14px 16px;
-            border: 1px solid #e8ecf1;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 16px 16px 14px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
             text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .member-pool-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
         .member-name {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 15px;
+            color: var(--pine-deep);
         }
         .member-amount {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 21px;
+            font-weight: 800;
             margin: 4px 0 2px;
+            color: var(--ink);
         }
         .member-detail {
             font-size: 12px;
-            color: #888;
+            color: var(--ink-faint);
         }
         .member-detail .used {
-            color: #e74c3c;
+            color: var(--warning);
+            font-weight: 600;
         }
         .member-detail .remain {
-            color: #2ecc71;
+            color: var(--success);
+            font-weight: 600;
         }
         .progress-bar {
             width: 100%;
-            height: 5px;
-            background: #e8ecf1;
+            height: 6px;
+            background: #EDE7D9;
             border-radius: 4px;
-            margin-top: 6px;
+            margin-top: 8px;
             overflow: hidden;
         }
         .progress-fill {
             height: 100%;
             border-radius: 4px;
-            transition: width 0.4s;
-            background: linear-gradient(90deg, #4a6cf7, #6a3de8);
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, var(--gold), #D9AC5C);
         }
         .progress-fill.danger {
-            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            background: linear-gradient(90deg, var(--danger), #D97F6C);
         }
 
         /* ========== 表单 ========== */
@@ -430,26 +591,27 @@
         }
         .form-group label {
             display: block;
-            font-weight: 500;
+            font-weight: 600;
             font-size: 13px;
-            margin-bottom: 4px;
-            color: #555;
+            margin-bottom: 5px;
+            color: var(--ink-soft);
         }
         .form-group input,
         .form-group select {
             width: 100%;
             padding: 9px 14px;
-            border: 1px solid #d0d5dd;
-            border-radius: 8px;
+            border: 1px solid var(--line-strong);
+            border-radius: 9px;
             font-size: 14px;
-            transition: border 0.2s;
-            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--card);
+            color: var(--ink);
         }
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #4a6cf7;
-            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.12);
+            border-color: var(--pine);
+            box-shadow: 0 0 0 3px rgba(58, 90, 76, 0.13);
         }
         .form-row {
             display: grid;
@@ -459,42 +621,42 @@
         .btn {
             padding: 9px 22px;
             border: none;
-            border-radius: 8px;
+            border-radius: 9px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
         .btn-primary {
-            background: #4a6cf7;
+            background: var(--pine);
             color: #fff;
+            box-shadow: 0 3px 10px rgba(58, 90, 76, 0.22);
         }
         .btn-primary:hover {
-            background: #3a5cd6;
+            background: var(--pine-deep);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(74, 108, 247, 0.3);
         }
         .btn-success {
-            background: #2ecc71;
+            background: var(--success);
             color: #fff;
         }
         .btn-success:hover {
-            background: #27ae60;
+            background: #3D6B4F;
         }
         .btn-danger {
-            background: #e74c3c;
+            background: var(--danger);
             color: #fff;
         }
         .btn-danger:hover {
-            background: #c0392b;
+            background: #A94F4A;
         }
         .btn-outline {
             background: transparent;
-            color: #4a6cf7;
-            border: 1.5px solid #4a6cf7;
+            color: var(--pine);
+            border: 1.5px solid var(--pine);
         }
         .btn-outline:hover {
-            background: #4a6cf7;
+            background: var(--pine);
             color: #fff;
         }
         .btn-sm {
@@ -513,7 +675,7 @@
             flex-wrap: wrap;
             gap: 10px;
             padding: 12px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--line);
         }
         .bill-item:last-child {
             border-bottom: none;
@@ -523,12 +685,13 @@
             min-width: 150px;
         }
         .bill-info .bill-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 15px;
+            color: var(--ink);
         }
         .bill-info .bill-meta {
             font-size: 12px;
-            color: #888;
+            color: var(--ink-faint);
             margin-top: 2px;
         }
         .bill-amounts {
@@ -536,12 +699,13 @@
             min-width: 110px;
         }
         .bill-amounts .total {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 16px;
+            color: var(--pine-deep);
         }
         .bill-amounts .detail {
             font-size: 12px;
-            color: #888;
+            color: var(--ink-faint);
         }
         .bill-actions {
             display: flex;
@@ -554,9 +718,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px dashed #eee;
+            padding: 7px 0;
+            border-bottom: 1px dashed var(--line);
             font-size: 14px;
+            color: var(--ink-soft);
         }
         .claim-item:last-child {
             border-bottom: none;
@@ -565,44 +730,47 @@
             font-size: 12px;
             padding: 2px 10px;
             border-radius: 12px;
+            font-weight: 600;
         }
         .claim-status.pending {
-            background: #fff3e0;
-            color: #e67e22;
+            background: var(--warning-soft);
+            color: #A96A1E;
         }
         .claim-status.settled {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: var(--success-soft);
+            color: #3D6B4F;
         }
 
         /* ========== 结算清单 ========== */
         .settlement-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
         .settlement-group h4 {
             font-size: 15px;
-            margin-bottom: 8px;
-            color: #555;
+            margin-bottom: 10px;
+            color: var(--pine-deep);
+            font-weight: 700;
         }
         .settlement-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 9px 14px;
-            background: #fff;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            border: 1px solid #e8ecf1;
+            padding: 11px 16px;
+            background: var(--card);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
         }
         .settlement-item .amount {
-            font-weight: 700;
-            color: #4a6cf7;
+            font-weight: 800;
+            color: var(--pine);
         }
         .settlement-item .amount.pay {
-            color: #e74c3c;
+            color: var(--danger);
         }
         .settlement-item .amount.receive {
-            color: #2ecc71;
+            color: var(--success);
         }
 
         /* ========== 激励榜 ========== */
@@ -612,28 +780,35 @@
             gap: 14px;
         }
         .rank-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid #e8ecf1;
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 18px 16px 16px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-sm);
             text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .rank-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
         .rank-card .rank-emoji {
-            font-size: 32px;
+            font-size: 34px;
         }
         .rank-card .rank-name {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 15px;
-            margin: 4px 0;
+            color: var(--pine-deep);
+            margin: 6px 0;
         }
         .rank-card .rank-number {
-            font-size: 22px;
-            font-weight: 700;
-            color: #4a6cf7;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--gold);
         }
         .rank-card .rank-badge {
             font-size: 12px;
-            color: #888;
+            color: var(--ink-faint);
         }
 
         /* ========== Toast 提示 ========== */
@@ -648,22 +823,23 @@
         }
         .toast {
             padding: 12px 22px;
-            border-radius: 10px;
+            border-radius: 12px;
             color: #fff;
-            font-weight: 500;
+            font-weight: 600;
             font-size: 14px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-md);
             animation: slideIn 0.3s ease;
             min-width: 200px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         .toast.success {
-            background: #2ecc71;
+            background: var(--success);
         }
         .toast.error {
-            background: #e74c3c;
+            background: var(--danger);
         }
         .toast.info {
-            background: #4a6cf7;
+            background: var(--pine);
         }
         @keyframes slideIn {
             from {
@@ -684,26 +860,29 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(43, 56, 49, 0.45);
             z-index: 9998;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
         }
         .modal-overlay.open {
             display: flex;
         }
         .modal-box {
-            background: #fff;
-            border-radius: 16px;
+            background: var(--card);
+            border-radius: var(--radius-lg);
             padding: 28px 30px;
             max-width: 420px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-lg);
             animation: fadeIn 0.25s ease;
         }
         .modal-box h3 {
             margin-bottom: 14px;
+            color: var(--pine-deep);
+            font-weight: 800;
         }
         .modal-actions {
             display: flex;
@@ -716,12 +895,13 @@
         .empty-state {
             text-align: center;
             padding: 36px 20px;
-            color: #aaa;
+            color: var(--ink-faint);
         }
         .empty-state .emoji {
             font-size: 40px;
             display: block;
             margin-bottom: 10px;
+            filter: grayscale(0.15);
         }
 
         /* ========== 响应式 ========== */
@@ -733,11 +913,11 @@
                 font-size: 16px;
             }
             .nav-tab {
-                padding: 5px 10px;
+                padding: 6px 10px;
                 font-size: 12px;
             }
             .page {
-                padding: 14px 14px 20px;
+                padding: 14px 14px 24px;
             }
             .form-row {
                 grid-template-columns: 1fr;
@@ -759,7 +939,7 @@
                 grid-template-columns: 1fr 1fr;
             }
             .login-box {
-                padding: 32px 24px;
+                padding: 36px 26px;
             }
         }
         @media (max-width: 400px) {
@@ -773,6 +953,36 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ========== 无障碍：尊重系统减弱动效设置 ========== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ========== 兼容 JS 生成的旧内联色（仅统一色相，不影响功能） ========== */
+        .claimant-item [style*="color:#4a6cf7"] {
+            color: var(--pine) !important;
+        }
+        [style*="background:#fef2f2"] {
+            background: var(--danger-soft) !important;
+        }
+        [style*="background:#f0fdf4"] {
+            background: var(--success-soft) !important;
+        }
+        /* JS 模板中的红/绿/橙文字色 → 主题色 */
+        [style*="color:#e74c3c"] {
+            color: var(--danger) !important;
+        }
+        [style*="color:#2ecc71"] {
+            color: var(--success) !important;
+        }
+        [style*="color:#e67e22"] {
+            color: var(--warning) !important;
+        }
     </style>
 </head>
 <body>
@@ -781,11 +991,11 @@
     <div id="globalErrorOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:99999;justify-content:center;align-items:center;backdrop-filter:blur(6px);">
         <div style="background:#fff;border-radius:16px;padding:32px 36px;max-width:460px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
             <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
-            <h3 id="globalErrorTitle" style="margin-bottom:8px;color:#e74c3c;">网络连接失败</h3>
-            <p id="globalErrorMsg" style="color:#666;font-size:14px;line-height:1.6;margin-bottom:16px;">无法连接到后端服务器，请检查服务是否启动。</p>
-            <div id="globalErrorDetail" style="background:#f8f9fc;padding:10px 14px;border-radius:8px;font-size:12px;color:#888;text-align:left;margin-bottom:16px;word-break:break-all;display:none;"></div>
-            <button onclick="hideGlobalError()" style="padding:10px 28px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">我知道了</button>
-            <button onclick="hideGlobalError();retryLastAction();" style="padding:10px 28px;border:1.5px solid #4a6cf7;border-radius:8px;background:transparent;color:#4a6cf7;font-size:14px;font-weight:600;cursor:pointer;margin-left:8px;">重试</button>
+            <h3 id="globalErrorTitle" style="margin-bottom:8px;color:var(--danger);">网络连接失败</h3>
+            <p id="globalErrorMsg" style="color:var(--ink-soft);font-size:14px;line-height:1.6;margin-bottom:16px;">无法连接到后端服务器，请检查服务是否启动。</p>
+            <div id="globalErrorDetail" style="background:var(--pine-soft);padding:10px 14px;border-radius:8px;font-size:12px;color:var(--ink-soft);text-align:left;margin-bottom:16px;word-break:break-all;display:none;"></div>
+            <button onclick="hideGlobalError()" style="padding:10px 28px;border:none;border-radius:8px;background:var(--pine);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">我知道了</button>
+            <button onclick="hideGlobalError();retryLastAction();" style="padding:10px 28px;border:1.5px solid var(--pine);border-radius:8px;background:transparent;color:var(--pine);font-size:14px;font-weight:600;cursor:pointer;margin-left:8px;">重试</button>
         </div>
     </div>
 
@@ -794,15 +1004,15 @@
         <div class="modal-box" style="max-width:400px;">
             <h3>✏️ 修改承诺上限</h3>
             <div style="padding:16px 0;">
-                <div style="margin-bottom:12px;font-size:14px;color:#666;">
-                    当前上限：<strong id="editCommitCurrent" style="color:#333;">0</strong> 元 &nbsp;|&nbsp;
-                    已认领：<strong id="editCommitUsed" style="color:#e74c3c;">0</strong> 元
+                <div style="margin-bottom:12px;font-size:14px;color:var(--ink-soft);">
+                    当前上限：<strong id="editCommitCurrent" style="color:var(--ink);">0</strong> 元 &nbsp;|&nbsp;
+                    已认领：<strong id="editCommitUsed" style="color:var(--danger);">0</strong> 元
                 </div>
-                <div style="margin-bottom:8px;font-size:13px;color:#333;">新上限金额（仅可调高）</div>
+                <div style="margin-bottom:8px;font-size:13px;color:var(--ink);">新上限金额（仅可调高）</div>
                 <input type="number" id="editCommitInput" placeholder="请输入新的承诺上限" step="1" min="0"
-                    style="width:100%;padding:12px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;"
-                    onfocus="this.style.borderColor='#4a6cf7'" onblur="this.style.borderColor='#d0d5dd'" />
-                <div id="editCommitError" style="color:#e74c3c;font-size:13px;margin-top:6px;display:none;"></div>
+                    style="width:100%;padding:12px 14px;border:2px solid var(--line-strong);border-radius:8px;font-size:16px;box-sizing:border-box;outline:none;"
+                    onfocus="this.style.borderColor='#3A5A4C'" onblur="this.style.borderColor='#D8CDB4'" />
+                <div id="editCommitError" style="color:var(--danger);font-size:13px;margin-top:6px;display:none;"></div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-outline btn-sm" onclick="closeEditCommitment()">取消</button>
@@ -861,7 +1071,7 @@
         <!-- 导航栏 -->
         <nav class="navbar">
             <div class="navbar-brand">
-                🏠 家庭报销管家
+                家庭报销管家
                 <span>v1.0</span>
             </div>
             <div class="navbar-right">
@@ -908,33 +1118,33 @@
             <h3 style="margin-bottom:10px;font-size:15px;">👨‍👩‍👧‍👦 成员基金池</h3>
             <div class="member-pool-grid" id="memberPoolGrid"></div>
 
-            <div class="card" style="background:#fff;border:2px solid #4a6cf7;">
+            <div class="card" style="border:2px solid var(--gold);">
                 <div class="card-header">
                     <span class="card-title">🧑 我的速览</span>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px;">
-                    <div><strong>承诺总额 <span id="editCommitBtn" onclick="showEditCommitment()" style="cursor:pointer;font-size:13px;color:#4a6cf7;" title="修改承诺上限">✏️</span></strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
-                    <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
-                    <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
-                    <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:#2ecc71;">0</span> 元</div>
-                    <div><strong>应付款</strong><br /><span id="myPayable" style="font-size:19px;font-weight:700;color:#e74c3c;">0</span> 元</div>
+                    <div><strong>承诺总额 <span id="editCommitBtn" onclick="showEditCommitment()" style="cursor:pointer;font-size:13px;color:var(--pine);" title="修改承诺上限">✏️</span></strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
+                    <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:var(--danger);">0</span> 元</div>
+                    <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:var(--success);">0</span> 元</div>
+                    <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:var(--success);">0</span> 元</div>
+                    <div><strong>应付款</strong><br /><span id="myPayable" style="font-size:19px;font-weight:700;color:var(--danger);">0</span> 元</div>
                 </div>
                 <!-- 应付款明细列表 -->
-                <div id="payableDetailList" style="border-top:1px solid #eee;padding-top:10px;">
-                    <div style="font-size:13px;font-weight:600;color:#e74c3c;margin-bottom:6px;">📋 应付款明细（转给谁）</div>
-                    <div id="payableDetailItems" style="font-size:13px;color:#555;"></div>
+                <div id="payableDetailList" style="border-top:1px solid var(--line);padding-top:10px;">
+                    <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:6px;">📋 应付款明细（转给谁）</div>
+                    <div id="payableDetailItems" style="font-size:13px;color:var(--ink-soft);"></div>
                 </div>
                 <!-- 应收款明细列表 -->
-                <div id="receivableDetailList" style="border-top:1px solid #eee;padding-top:10px;margin-top:8px;">
-                    <div style="font-size:13px;font-weight:600;color:#2ecc71;margin-bottom:6px;">📋 应收款明细（谁付给我）</div>
-                    <div id="receivableDetailItems" style="font-size:13px;color:#555;"></div>
+                <div id="receivableDetailList" style="border-top:1px solid var(--line);padding-top:10px;margin-top:8px;">
+                    <div style="font-size:13px;font-weight:600;color:var(--success);margin-bottom:6px;">📋 应收款明细（谁付给我）</div>
+                    <div id="receivableDetailItems" style="font-size:13px;color:var(--ink-soft);"></div>
                 </div>
 
                 <!-- 仪表盘内嵌账单列表 -->
-                <div id="dashBillsSection" style="border-top:1px solid #eee;padding-top:10px;margin-top:8px;">
+                <div id="dashBillsSection" style="border-top:1px solid var(--line);padding-top:10px;margin-top:8px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                        <span style="font-size:13px;font-weight:600;color:#333;">📄 账单记录</span>
-                        <span style="font-size:11px;color:#888;">最近10条</span>
+                        <span style="font-size:13px;font-weight:600;color:var(--ink);">📄 账单记录</span>
+                        <span style="font-size:11px;color:var(--ink-faint);">最近10条</span>
                     </div>
                     <div class="filter-tabs" id="dashBillFilterBar" style="margin-bottom:8px;">
                         <button class="filter-tab active" data-dash-filter="all" onclick="filterDashBills('all')">📋 全部</button>
@@ -955,7 +1165,7 @@
             <h2 class="page-title">📋 账单管理</h2>
             <p class="page-subtitle">创建新账单，查看所有历史账单及收付款人</p>
 
-            <div class="card" style="background:#fff;border:2px dashed #d0d5dd;">
+            <div class="card" style="border:2px dashed var(--line-strong);">
                 <div class="card-header">
                     <span class="card-title">➕ 创建新账单</span>
                 </div>
