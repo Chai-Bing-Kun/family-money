@@ -6,12 +6,14 @@
     <title>家庭报销管理系统</title>
     <style>
         /* ================================================================
-           家庭报销管家 · 视觉重构
+           家庭报销管家 · 视觉重构 v2
+           布局：侧边栏 + 顶栏 + 内容区（管理后台式）
            主题：家庭账本 —— 墨绿封皮 · 暖纸内页 · 金色饰线
-           功能与结构保持不变，仅重构视觉层
+           业务功能保持不变，仅重构布局 / 视觉 / 新增交互增强
            ================================================================ */
         :root {
             --paper: #F5F0E7;
+            --paper-deep: #EFE9DA;
             --card: #FFFDF8;
             --ink: #2B3831;
             --ink-soft: #5E6B64;
@@ -20,6 +22,7 @@
             --pine-deep: #2C4438;
             --pine-soft: #E7EEE8;
             --gold: #B98A3E;
+            --gold-light: #D9AC5C;
             --gold-soft: #F4EAD8;
             --line: #E7DFCE;
             --line-strong: #D8CDB4;
@@ -36,6 +39,8 @@
             --shadow-lg: 0 8px 24px rgba(43, 56, 49, .12), 0 24px 60px rgba(43, 56, 49, .16);
             --radius: 14px;
             --radius-lg: 20px;
+            --sidebar-w: 240px;
+            --topbar-h: 62px;
         }
 
         /* ========== 全局重置 ========== */
@@ -82,11 +87,11 @@
         .login-box {
             position: relative;
             background: var(--card);
-            padding: 52px 44px 40px;
+            padding: 46px 44px 38px;
             border-radius: var(--radius-lg);
             border: 1px solid var(--line);
             box-shadow: var(--shadow-lg);
-            width: 400px;
+            width: 410px;
             max-width: 94%;
             overflow: hidden;
         }
@@ -101,23 +106,35 @@
             background: linear-gradient(225deg, transparent 50%, rgba(185, 138, 62, 0.30) 50%);
             border-bottom-left-radius: 12px;
         }
+        .login-emoji {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            box-shadow: 0 6px 16px rgba(185, 138, 62, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+        }
         .login-box .logo {
             text-align: center;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             color: var(--pine-deep);
             margin-bottom: 6px;
         }
         .login-box .subtitle {
             text-align: center;
             color: var(--ink-faint);
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 4px;
-            margin-bottom: 30px;
+            margin-bottom: 28px;
         }
         .login-box .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
         .login-box .form-group label {
             display: block;
@@ -146,7 +163,7 @@
         .login-box .login-options {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .login-box .login-option {
             display: flex;
@@ -185,149 +202,379 @@
         .login-box .btn-login:active {
             transform: translateY(0);
         }
-        .login-box .demo-hint {
+        /* 快捷登录 —— 新增交互 */
+        .quick-login {
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--line-strong);
+        }
+        .quick-login-title {
             text-align: center;
-            margin-top: 18px;
             font-size: 12px;
             color: var(--ink-faint);
+            letter-spacing: 2px;
+            margin-bottom: 10px;
         }
-        .login-box .demo-hint code {
-            background: var(--pine-soft);
-            padding: 2px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            color: var(--pine);
+        .quick-login-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .quick-login-btn {
+            flex: 1;
+            padding: 9px 6px;
+            border: 1.5px solid var(--line-strong);
+            background: #FBF8F1;
+            color: var(--ink-soft);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-login-btn:hover {
+            border-color: var(--gold);
+            background: var(--gold-soft);
+            color: var(--pine-deep);
+            transform: translateY(-1px);
         }
 
-        /* ========== 主应用容器 ========== */
+        /* ========== 主应用布局：侧边栏 + 顶栏 + 内容区 ========== */
         #appContainer {
             display: none;
-            max-width: 1100px;
-            margin: 0 auto;
-            background: transparent;
             min-height: 100vh;
         }
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+            max-width: 1440px;
+            margin: 0 auto;
+        }
 
-        /* ========== 顶部导航 ========== */
-        .navbar {
+        /* ---------- 侧边栏 ---------- */
+        .sidebar {
             position: sticky;
             top: 0;
-            z-index: 100;
-            background: linear-gradient(135deg, var(--pine-deep), var(--pine));
-            padding: 14px 26px 12px;
+            height: 100vh;
+            width: var(--sidebar-w);
+            flex-shrink: 0;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-bottom: 3px solid var(--gold);
-            box-shadow: 0 2px 10px rgba(43, 56, 49, 0.18);
+            flex-direction: column;
+            padding: 22px 14px 16px;
+            background: linear-gradient(180deg, #243B30, var(--pine-deep) 55%, #1E322A);
+            border-right: 2px solid var(--gold);
+            box-shadow: 3px 0 20px rgba(43, 56, 49, 0.18);
+            z-index: 60;
+            transition: margin-left 0.28s ease;
         }
-        .navbar-brand {
+        body.sidebar-collapsed .sidebar {
+            margin-left: calc(-1 * var(--sidebar-w));
+        }
+        .sidebar-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            color: #FDFBF5;
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 1px;
+            gap: 12px;
+            padding: 0 6px 18px;
+            border-bottom: 1px solid rgba(253, 251, 245, 0.14);
         }
-        /* 品牌金色徽章 —— 签名元素 */
-        .navbar-brand::before {
-            content: "🏠";
+        .sidebar-brand-badge {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #D9AC5C, var(--gold));
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-            font-size: 17px;
+            font-size: 20px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
         }
-        .navbar-brand span {
-            opacity: 0.72;
-            font-weight: 400;
-            font-size: 12px;
-            margin-left: 6px;
+        .sidebar-brand-name {
+            color: #FDFBF5;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+        .sidebar-brand-sub {
+            color: rgba(253, 251, 245, 0.5);
+            font-size: 11px;
             letter-spacing: 1px;
         }
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-        .navbar-user {
-            color: rgba(253, 251, 245, 0.92);
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .navbar-user .role-badge {
-            background: rgba(217, 172, 92, 0.22);
-            border: 1px solid rgba(217, 172, 92, 0.4);
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-left: 8px;
-            color: #F3DFB8;
-        }
-        .btn-logout {
-            padding: 6px 16px;
-            border: 1.5px solid rgba(253, 251, 245, 0.35);
-            background: transparent;
-            color: #FDFBF5;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover {
-            background: rgba(253, 251, 245, 0.14);
-            border-color: #FDFBF5;
-        }
 
-        .nav-tabs {
+        .side-nav {
+            flex: 1;
             display: flex;
+            flex-direction: column;
             gap: 4px;
-            flex-wrap: wrap;
+            margin-top: 18px;
+            overflow-y: auto;
         }
         .nav-tab {
             position: relative;
-            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
             border: none;
             background: transparent;
-            color: rgba(253, 251, 245, 0.7);
-            border-radius: 8px;
+            color: rgba(253, 251, 245, 0.66);
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             letter-spacing: 1px;
-            transition: all 0.25s;
+            text-align: left;
+            transition: all 0.22s;
+            font-family: inherit;
+        }
+        .nav-tab-icon {
+            font-size: 16px;
+            width: 22px;
+            text-align: center;
+            filter: saturate(0.9);
         }
         .nav-tab:hover {
-            background: rgba(253, 251, 245, 0.1);
+            background: rgba(253, 251, 245, 0.08);
             color: #FDFBF5;
         }
         .nav-tab.active {
-            background: rgba(253, 251, 245, 0.14);
+            background: linear-gradient(90deg, rgba(185, 138, 62, 0.28), rgba(185, 138, 62, 0.12));
             color: #FDFBF5;
+            font-weight: 700;
+            box-shadow: inset 0 0 0 1px rgba(217, 172, 92, 0.25);
         }
-        .nav-tab.active::after {
+        /* 侧边栏激活金条 —— 签名元素 */
+        .nav-tab.active::before {
             content: "";
             position: absolute;
-            left: 14px;
-            right: 14px;
-            bottom: 2px;
-            height: 2px;
-            border-radius: 2px;
-            background: var(--gold);
+            left: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 3px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(253, 251, 245, 0.14);
+            padding-top: 14px;
+            margin-top: 8px;
+        }
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 6px 12px;
+        }
+        .sidebar-avatar {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(185, 138, 62, 0.25);
+            border: 1px solid rgba(217, 172, 92, 0.45);
+        }
+        .sidebar-user-name {
+            color: rgba(253, 251, 245, 0.92);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+        .role-badge {
+            background: rgba(217, 172, 92, 0.22);
+            border: 1px solid rgba(217, 172, 92, 0.4);
+            padding: 1px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-left: 6px;
+            color: #F3DFB8;
+            font-weight: 400;
+        }
+        .btn-logout {
+            width: 100%;
+            padding: 9px 14px;
+            border: 1.5px solid rgba(253, 251, 245, 0.28);
+            background: transparent;
+            color: rgba(253, 251, 245, 0.8);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.22s;
+        }
+        .btn-logout:hover {
+            background: rgba(217, 85, 75, 0.22);
+            border-color: rgba(253, 251, 245, 0.6);
+            color: #FDFBF5;
+        }
+
+        /* ---------- 主区域 ---------- */
+        .main-area {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---------- 顶部栏 ---------- */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 55;
+            height: var(--topbar-h);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 22px;
+            background: rgba(245, 240, 231, 0.86);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--line);
+        }
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            flex-shrink: 0;
+            border: 1px solid var(--line-strong);
+            background: var(--card);
+            color: var(--pine);
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .icon-btn:hover {
+            background: var(--pine-soft);
+            border-color: var(--pine);
+        }
+        .topbar-title {
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--pine-deep);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .topbar-clock {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink-soft);
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            background: var(--pine-soft);
+            border-radius: 8px;
+        }
+        .topbar-greeting {
+            font-size: 13px;
+            color: var(--gold);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ---------- 全局搜索（新增交互） ---------- */
+        .search-box {
+            position: relative;
+        }
+        .search-input {
+            width: 210px;
+            height: 36px;
+            padding: 0 14px 0 36px;
+            border: 1.5px solid var(--line-strong);
+            border-radius: 18px;
+            font-size: 13px;
+            background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2396A099' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 13px center;
+            color: var(--ink);
+            outline: none;
+            transition: all 0.25s, width 0.25s;
+            font-family: inherit;
+        }
+        .search-input::placeholder {
+            color: var(--ink-faint);
+        }
+        .search-input:focus {
+            border-color: var(--pine);
+            box-shadow: 0 0 0 3px rgba(58, 90, 76, 0.13);
+            width: 260px;
+        }
+        .search-dropdown {
+            display: none;
+            position: absolute;
+            top: 44px;
+            right: 0;
+            width: 340px;
+            max-height: 330px;
+            overflow-y: auto;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+            z-index: 120;
+        }
+        .search-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .search-item:hover {
+            background: var(--pine-soft);
+        }
+        .search-item-title {
+            font-weight: 600;
+            font-size: 13.5px;
+            color: var(--ink);
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .search-item-meta {
+            font-size: 12px;
+            color: var(--ink-faint);
+            white-space: nowrap;
+        }
+        .search-empty {
+            padding: 22px 12px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--ink-faint);
         }
 
         /* ========== 页面容器 ========== */
+        .content {
+            flex: 1;
+            width: 100%;
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 28px 60px;
+        }
         .page {
             display: none;
-            padding: 26px 28px 44px;
             animation: fadeIn 0.35s ease;
         }
         .page.active {
@@ -344,20 +591,57 @@
             }
         }
 
-        .page-title {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
+        /* ========== 区块标题 ========== */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             color: var(--pine-deep);
+            margin: 22px 0 12px;
         }
-        .page-subtitle {
-            color: var(--ink-faint);
-            font-size: 13px;
-            letter-spacing: 1px;
-            margin-bottom: 24px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid var(--line);
+        .section-title::before {
+            content: "";
+            width: 4px;
+            height: 16px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
+        }
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* ========== 待办提醒条（新增交互） ========== */
+        .todo-hint {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, var(--warning-soft), #FDF3E2);
+            border: 1px solid rgba(217, 138, 46, 0.35);
+            color: #8A5A1C;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+        .todo-hint.show {
+            display: flex;
+        }
+        .todo-hint .todo-emoji {
+            font-size: 18px;
+        }
+        .todo-hint a {
+            color: var(--warning);
+            cursor: pointer;
+            text-decoration: underline;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .todo-hint a:hover {
+            color: #B06A14;
         }
 
         /* ========== 卡片 ========== */
@@ -368,7 +652,7 @@
             margin-bottom: 14px;
             border: 1px solid var(--line);
             box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.2s, transform 0.2s;
+            transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
         }
         .card:hover {
             box-shadow: var(--shadow-md);
@@ -397,7 +681,7 @@
             bottom: 3px;
             width: 4px;
             border-radius: 3px;
-            background: linear-gradient(180deg, var(--gold), #D9AC5C);
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
         }
         .card-badge {
             padding: 3px 12px;
@@ -405,6 +689,7 @@
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 0.5px;
+            white-space: nowrap;
         }
         .badge-pending {
             background: var(--warning-soft);
@@ -421,6 +706,26 @@
         .badge-settled {
             background: var(--success-soft);
             color: #3D6B4F;
+        }
+        /* 金色描边卡片（我的速览） */
+        .gold-card {
+            border: 1.5px solid rgba(185, 138, 62, 0.5);
+            background: linear-gradient(180deg, #FFFDF8, #FFFBF2);
+        }
+        .card-edit {
+            cursor: pointer;
+            font-size: 12.5px;
+            color: var(--pine);
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--pine-soft);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .card-edit:hover {
+            background: var(--gold-soft);
+            color: var(--gold);
         }
 
         /* ========== 状态筛选标签 ========== */
@@ -440,6 +745,7 @@
             font-size: 12px;
             font-weight: 500;
             transition: all 0.2s;
+            font-family: inherit;
         }
         .filter-tab:hover {
             border-color: var(--gold);
@@ -462,7 +768,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 3px 0;
+            padding: 4px 0;
             color: var(--ink-soft);
         }
         .claimant-item .amount-tag {
@@ -477,7 +783,7 @@
         /* ========== 统计卡片 ========== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
             gap: 14px;
             margin-bottom: 22px;
         }
@@ -485,11 +791,16 @@
             position: relative;
             background: var(--card);
             border-radius: var(--radius);
-            padding: 20px 18px 16px;
+            padding: 18px 16px 15px;
             border: 1px solid var(--line);
             box-shadow: var(--shadow-sm);
             text-align: center;
             overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
         }
         /* 顶部金色饰线 —— 签名元素 */
         .stat-card::before {
@@ -502,8 +813,19 @@
             border-radius: 0 0 3px 3px;
             background: linear-gradient(90deg, transparent, var(--gold), transparent);
         }
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            margin: 0 auto 8px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            background: var(--pine-soft);
+        }
         .stat-number {
-            font-size: 28px;
+            font-size: 27px;
             font-weight: 800;
             color: var(--pine);
             letter-spacing: 0.5px;
@@ -527,22 +849,39 @@
         /* ========== 成员基金池 ========== */
         .member-pool-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
             gap: 12px;
-            margin-bottom: 22px;
+            margin-bottom: 8px;
         }
         .member-pool-card {
+            position: relative;
             background: var(--card);
             border-radius: var(--radius);
             padding: 16px 16px 14px;
             border: 1px solid var(--line);
             box-shadow: var(--shadow-sm);
             text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            overflow: hidden;
         }
         .member-pool-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             box-shadow: var(--shadow-md);
+            border-color: rgba(185, 138, 62, 0.5);
+        }
+        .member-pool-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(185, 138, 62, 0.55), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .member-pool-card:hover::before {
+            opacity: 1;
         }
         .member-name {
             font-weight: 700;
@@ -579,10 +918,69 @@
             height: 100%;
             border-radius: 4px;
             transition: width 0.5s ease;
-            background: linear-gradient(90deg, var(--gold), #D9AC5C);
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
         }
         .progress-fill.danger {
             background: linear-gradient(90deg, var(--danger), #D97F6C);
+        }
+
+        /* ========== 迷你速览（我的速览） ========== */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .mini-stat {
+            background: #FBF8F1;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            padding: 12px 10px 10px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .mini-stat:hover {
+            transform: translateY(-2px);
+            border-color: rgba(185, 138, 62, 0.55);
+        }
+        .mini-label {
+            font-size: 11.5px;
+            color: var(--ink-faint);
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .mini-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .mini-value.danger {
+            color: var(--danger);
+        }
+        .mini-value.success {
+            color: var(--success);
+        }
+        .mini-section-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 10px 0 6px;
+        }
+        .mini-section-label.pay {
+            color: var(--danger);
+        }
+        .mini-section-label.recv {
+            color: var(--success);
+        }
+        #payableDetailItems > div,
+        #receivableDetailItems > div {
+            transition: transform 0.15s;
+        }
+        #payableDetailItems > div:hover,
+        #receivableDetailItems > div:hover {
+            transform: translateX(2px);
         }
 
         /* ========== 表单 ========== */
@@ -606,6 +1004,7 @@
             transition: border-color 0.2s, box-shadow 0.2s;
             background: var(--card);
             color: var(--ink);
+            font-family: inherit;
         }
         .form-group input:focus,
         .form-group select:focus {
@@ -626,6 +1025,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            font-family: inherit;
         }
         .btn-primary {
             background: var(--pine);
@@ -667,7 +1067,15 @@
             width: 100%;
         }
 
-        /* ========== 账单列表 ========== */
+        /* ========== 账单列表（JS 卡片式渲染） ========== */
+        #billList .card,
+        #dashBillList .card {
+            border-left: 3px solid var(--pine);
+        }
+        #billList .card:hover,
+        #dashBillList .card:hover {
+            border-left-color: var(--gold-light);
+        }
         .bill-item {
             display: flex;
             justify-content: space-between;
@@ -741,26 +1149,54 @@
             color: #3D6B4F;
         }
 
-        /* ========== 结算清单 ========== */
+        /* ========== 结算清单（两栏布局） ========== */
+        #settlementContent {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: start;
+        }
         .settlement-group {
-            margin-bottom: 20px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
         }
         .settlement-group h4 {
             font-size: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: var(--pine-deep);
             font-weight: 700;
+            padding-left: 12px;
+            position: relative;
+        }
+        .settlement-group h4::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            bottom: 4px;
+            width: 4px;
+            border-radius: 3px;
+            background: linear-gradient(180deg, var(--gold-light), var(--gold));
         }
         .settlement-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 11px 16px;
-            background: var(--card);
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 11px 14px;
+            background: #FBF8F1;
             border-radius: 10px;
             margin-bottom: 6px;
             border: 1px solid var(--line);
-            box-shadow: var(--shadow-sm);
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .settlement-item:hover {
+            border-color: var(--line-strong);
+            transform: translateY(-1px);
         }
         .settlement-item .amount {
             font-weight: 800;
@@ -774,32 +1210,58 @@
         }
 
         /* ========== 激励榜 ========== */
+        .rank-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            align-items: start;
+        }
         .rank-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 14px;
         }
         .rank-card {
+            position: relative;
             background: var(--card);
             border-radius: var(--radius);
-            padding: 18px 16px 16px;
+            padding: 20px 16px 16px;
             border: 1px solid var(--line);
             box-shadow: var(--shadow-sm);
             text-align: center;
             transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
         }
         .rank-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-3px);
             box-shadow: var(--shadow-md);
         }
+        .rank-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        }
         .rank-card .rank-emoji {
-            font-size: 34px;
+            width: 52px;
+            height: 52px;
+            margin: 0 auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            background: var(--gold-soft);
+            border: 1px solid rgba(185, 138, 62, 0.35);
         }
         .rank-card .rank-name {
             font-weight: 700;
             font-size: 15px;
             color: var(--pine-deep);
-            margin: 6px 0;
+            margin: 8px 0 2px;
         }
         .rank-card .rank-number {
             font-size: 24px;
@@ -811,11 +1273,11 @@
             color: var(--ink-faint);
         }
 
-        /* ========== Toast 提示 ========== */
+        /* ========== Toast 提示（右下角） ========== */
         .toast-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
@@ -891,6 +1353,46 @@
             justify-content: flex-end;
         }
 
+        /* ========== 浮动记账按钮（新增交互） ========== */
+        .fab {
+            position: fixed;
+            right: 26px;
+            bottom: 26px;
+            width: 56px;
+            height: 56px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pine), var(--pine-deep));
+            color: #fff;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 80;
+            box-shadow: var(--shadow-lg), 0 0 0 4px rgba(185, 138, 62, 0.28);
+            transition: transform 0.25s, box-shadow 0.25s;
+            font-family: inherit;
+        }
+        .fab:hover {
+            transform: translateY(-3px) rotate(90deg);
+            box-shadow: 0 14px 34px rgba(44, 68, 56, 0.35), 0 0 0 5px rgba(185, 138, 62, 0.38);
+        }
+        .fab:active {
+            transform: translateY(0) rotate(90deg);
+        }
+
+        /* ========== 账单页两栏布局 ========== */
+        .bills-layout {
+            display: grid;
+            grid-template-columns: 330px minmax(0, 1fr);
+            gap: 22px;
+            align-items: start;
+        }
+        .bills-create {
+            position: sticky;
+            top: calc(var(--topbar-h) + 18px);
+        }
+
         /* ========== 空状态 ========== */
         .empty-state {
             text-align: center;
@@ -905,28 +1407,120 @@
         }
 
         /* ========== 响应式 ========== */
-        @media (max-width: 640px) {
-            .navbar {
-                padding: 10px 16px;
+        @media (max-width: 920px) {
+            .app-layout {
+                flex-direction: column;
             }
-            .navbar-brand {
-                font-size: 16px;
+            .sidebar {
+                position: sticky;
+                top: 0;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                align-items: center;
+                padding: 10px 14px;
+                border-right: none;
+                border-bottom: 2px solid var(--gold);
+            }
+            .sidebar-brand {
+                padding: 0;
+                border-bottom: none;
+                flex-shrink: 0;
+            }
+            .sidebar-brand-badge {
+                width: 34px;
+                height: 34px;
+                font-size: 17px;
+            }
+            .sidebar-brand-sub {
+                display: none;
+            }
+            .side-nav {
+                flex-direction: row;
+                margin-top: 0;
+                margin-left: auto;
+                gap: 2px;
+                overflow-x: auto;
             }
             .nav-tab {
-                padding: 6px 10px;
+                padding: 8px 12px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+            .nav-tab.active::before {
+                left: 10px;
+                right: 10px;
+                top: auto;
+                bottom: 3px;
+                width: auto;
+                height: 2px;
+            }
+            .sidebar-footer {
+                border-top: none;
+                padding-top: 0;
+                margin-top: 0;
+                margin-left: 6px;
+                flex-shrink: 0;
+            }
+            .sidebar-user {
+                display: none;
+            }
+            .btn-logout {
+                width: auto;
+                padding: 7px 12px;
                 font-size: 12px;
             }
-            .page {
-                padding: 14px 14px 24px;
+            body.sidebar-collapsed .sidebar {
+                margin-left: 0;
             }
-            .form-row {
+            .content {
+                padding: 18px 18px 44px;
+            }
+            .bills-layout {
                 grid-template-columns: 1fr;
+            }
+            .bills-create {
+                position: static;
+            }
+            #settlementContent {
+                grid-template-columns: 1fr;
+            }
+            .topbar-clock,
+            .topbar-greeting {
+                display: none;
+            }
+        }
+        @media (max-width: 640px) {
+            .topbar {
+                padding: 0 12px;
+                gap: 8px;
+            }
+            .topbar-title {
+                font-size: 14.5px;
+            }
+            .search-input {
+                width: 130px;
+            }
+            .search-input:focus {
+                width: 160px;
+            }
+            .search-dropdown {
+                width: 280px;
             }
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
             }
             .member-pool-grid {
                 grid-template-columns: 1fr 1fr;
+            }
+            .rank-list {
+                grid-template-columns: 1fr 1fr;
+            }
+            .rank-cols {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
             }
             .bill-item {
                 flex-direction: column;
@@ -935,11 +1529,18 @@
             .bill-amounts {
                 text-align: left;
             }
-            .rank-list {
-                grid-template-columns: 1fr 1fr;
-            }
             .login-box {
                 padding: 36px 26px;
+            }
+            .mini-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .fab {
+                right: 18px;
+                bottom: 18px;
+                width: 50px;
+                height: 50px;
+                font-size: 23px;
             }
         }
         @media (max-width: 400px) {
@@ -950,6 +1551,9 @@
                 grid-template-columns: 1fr;
             }
             .rank-list {
+                grid-template-columns: 1fr;
+            }
+            .mini-stats {
                 grid-template-columns: 1fr;
             }
         }
@@ -969,9 +1573,13 @@
         }
         [style*="background:#fef2f2"] {
             background: var(--danger-soft) !important;
+            border: 1px solid rgba(217, 85, 75, 0.18) !important;
+            border-radius: 10px !important;
         }
         [style*="background:#f0fdf4"] {
             background: var(--success-soft) !important;
+            border: 1px solid rgba(63, 165, 100, 0.2) !important;
+            border-radius: 10px !important;
         }
         /* JS 模板中的红/绿/橙文字色 → 主题色 */
         [style*="color:#e74c3c"] {
@@ -1041,15 +1649,16 @@
     <!-- ================================================================ -->
     <div id="loginPage">
         <div class="login-box">
-            <div class="logo">🏠 家庭报销管家</div>
+            <div class="login-emoji">🏠</div>
+            <div class="logo">家庭报销管家</div>
             <div class="subtitle">家庭成员专用 · 请登录</div>
             <div class="form-group">
                 <label>账号</label>
-                <input type="text" id="loginUsername" placeholder="请输入账号" />
+                <input type="text" id="loginUsername" placeholder="请输入账号" autocomplete="username" />
             </div>
             <div class="form-group">
                 <label>密码</label>
-                <input type="password" id="loginPassword" placeholder="请输入密码" onkeydown="if(event.key==='Enter') handleLogin()" />
+                <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter') handleLogin()" />
             </div>
             <div class="login-options">
                 <label class="login-option">
@@ -1060,6 +1669,14 @@
                 </label>
             </div>
             <button class="btn-login" onclick="handleLogin()">登 录</button>
+            <div class="quick-login">
+                <div class="quick-login-title">💡 一键体验演示账号</div>
+                <div class="quick-login-buttons">
+                    <button class="quick-login-btn" onclick="quickLogin('mom','123456')">👩 妈妈</button>
+                    <button class="quick-login-btn" onclick="quickLogin('son','123456')">🧑 儿子</button>
+                    <button class="quick-login-btn" onclick="quickLogin('daughter','123456')">👧 女儿</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1067,81 +1684,132 @@
     <!-- 主应用容器 -->
     <!-- ================================================================ -->
     <div id="appContainer">
+        <div class="app-layout">
 
-        <!-- 导航栏 -->
-        <nav class="navbar">
-            <div class="navbar-brand">
-                家庭报销管家
-                <span>v1.0</span>
-            </div>
-            <div class="navbar-right">
-                <span class="navbar-user" id="navbarUser">
-                    👤 未登录
-                    <span class="role-badge" id="navbarRole">-</span>
-                </span>
-                <button class="btn-logout" onclick="handleLogout()">退出</button>
-                <div class="nav-tabs">
-                    <button class="nav-tab active" data-page="dashboard">📊 仪表盘</button>
-                    <button class="nav-tab" data-page="bills">📋 账单</button>
-                    <button class="nav-tab" data-page="settlement">💰 查账</button>
-                    <button class="nav-tab" data-page="ranking">🏆 激励榜</button>
+            <!-- ===== 侧边栏 ===== -->
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-badge">🏠</span>
+                    <div>
+                        <div class="sidebar-brand-name">家庭报销管家</div>
+                        <div class="sidebar-brand-sub">v1.0 · 家庭共济账本</div>
+                    </div>
                 </div>
-            </div>
-        </nav>
+                <nav class="side-nav">
+                    <button class="nav-tab active" data-page="dashboard"><span class="nav-tab-icon">📊</span>仪表盘</button>
+                    <button class="nav-tab" data-page="bills"><span class="nav-tab-icon">📋</span>账单</button>
+                    <button class="nav-tab" data-page="settlement"><span class="nav-tab-icon">💰</span>查账</button>
+                    <button class="nav-tab" data-page="ranking"><span class="nav-tab-icon">🏆</span>激励榜</button>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user">
+                        <span class="sidebar-avatar">👤</span>
+                        <span class="sidebar-user-name" id="navbarUser">
+                            未登录
+                            <span class="role-badge" id="navbarRole">-</span>
+                        </span>
+                    </div>
+                    <button class="btn-logout" onclick="handleLogout()">↪ 退出登录</button>
+                </div>
+            </aside>
 
-        <!-- ============================================================ -->
-        <!-- 页面1：仪表盘 -->
-        <!-- ============================================================ -->
-        <div class="page active" id="page-dashboard">
-            <h2 class="page-title">📊 家庭财务仪表盘</h2>
-            <p class="page-subtitle">实时查看家庭基金池与个人信用额度</p>
+            <!-- ===== 主区域 ===== -->
+            <div class="main-area">
 
-            <div class="stats-grid" id="statsGrid">
+                <!-- 顶部栏 -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <button class="icon-btn" id="sidebarToggle" onclick="toggleSidebar()" title="折叠/展开侧边栏">☰</button>
+                        <h1 class="topbar-title" id="topbarTitle">📊 家庭财务仪表盘</h1>
+                    </div>
+                    <div class="topbar-right">
+                        <div class="search-box" id="searchBox">
+                            <input type="text" id="globalSearch" class="search-input" placeholder="搜索账单…" autocomplete="off" />
+                            <div class="search-dropdown" id="searchDropdown"></div>
+                        </div>
+                        <button class="icon-btn" onclick="refreshAll()" title="刷新数据">🔄</button>
+                        <span class="topbar-clock" id="topClock">--:--:--</span>
+                        <span class="topbar-greeting" id="topGreeting"></span>
+                    </div>
+                </header>
+
+                <!-- ===== 内容区 ===== -->
+                <main class="content">
+
+                    <!-- ============================================ -->
+                    <!-- 页面1：仪表盘 -->
+                    <!-- ============================================ -->
+                    <div class="page active" id="page-dashboard">
+
+                        <!-- 待办提醒条（新增交互） -->
+                        <div class="todo-hint" id="todoHintBar"></div>
+
+                        <div class="stats-grid" id="statsGrid">
                 <div class="stat-card">
+                    <div class="stat-icon">💰</div>
                     <div class="stat-number" id="statTotalCommitment">0</div>
                     <div class="stat-label">家庭总承诺基金</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon">📥</div>
                     <div class="stat-number danger" id="statTotalPending">0</div>
                     <div class="stat-label">待报销总额</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon">🧮</div>
                     <div class="stat-number success" id="statTotalAvailable">0</div>
-                    <div class="stat-label">家庭可用心理额度</div>
+                    <div class="stat-label">家庭可用额度</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon">✅</div>
                     <div class="stat-number warning" id="statTotalSettled">0</div>
                     <div class="stat-label">已结清账单数</div>
                 </div>
             </div>
 
-            <h3 style="margin-bottom:10px;font-size:15px;">👨‍👩‍👧‍👦 成员基金池</h3>
+            <h3 class="section-title">👨‍👩‍👧‍👦 成员基金池</h3>
             <div class="member-pool-grid" id="memberPoolGrid"></div>
 
-            <div class="card" style="border:2px solid var(--gold);">
+            <div class="card gold-card">
                 <div class="card-header">
                     <span class="card-title">🧑 我的速览</span>
+                    <span class="card-edit" id="editCommitBtn" onclick="showEditCommitment()" title="修改承诺上限">✏️ 调整承诺上限</span>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px;">
-                    <div><strong>承诺总额 <span id="editCommitBtn" onclick="showEditCommitment()" style="cursor:pointer;font-size:13px;color:var(--pine);" title="修改承诺上限">✏️</span></strong><br /><span id="myCommitment" style="font-size:19px;font-weight:700;">0</span> 元</div>
-                    <div><strong>已认领待支付</strong><br /><span id="myUsed" style="font-size:19px;font-weight:700;color:var(--danger);">0</span> 元</div>
-                    <div><strong>剩余可认领</strong><br /><span id="myRemain" style="font-size:19px;font-weight:700;color:var(--success);">0</span> 元</div>
-                    <div><strong>应收款</strong><br /><span id="myReceivable" style="font-size:19px;font-weight:700;color:var(--success);">0</span> 元</div>
-                    <div><strong>应付款</strong><br /><span id="myPayable" style="font-size:19px;font-weight:700;color:var(--danger);">0</span> 元</div>
+                <div class="mini-stats">
+                    <div class="mini-stat">
+                        <div class="mini-label">承诺总额</div>
+                        <div class="mini-value"><span id="myCommitment">0</span> 元</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">已认领待支付</div>
+                        <div class="mini-value danger"><span id="myUsed">0</span> 元</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">剩余可认领</div>
+                        <div class="mini-value success"><span id="myRemain">0</span> 元</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">应收款</div>
+                        <div class="mini-value success"><span id="myReceivable">0</span> 元</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">应付款</div>
+                        <div class="mini-value danger"><span id="myPayable">0</span> 元</div>
+                    </div>
                 </div>
                 <!-- 应付款明细列表 -->
-                <div id="payableDetailList" style="border-top:1px solid var(--line);padding-top:10px;">
-                    <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:6px;">📋 应付款明细（转给谁）</div>
+                <div id="payableDetailList" style="border-top:1px dashed var(--line);padding-top:8px;">
+                    <div class="mini-section-label pay">📤 应付款明细（转给谁）</div>
                     <div id="payableDetailItems" style="font-size:13px;color:var(--ink-soft);"></div>
                 </div>
                 <!-- 应收款明细列表 -->
-                <div id="receivableDetailList" style="border-top:1px solid var(--line);padding-top:10px;margin-top:8px;">
-                    <div style="font-size:13px;font-weight:600;color:var(--success);margin-bottom:6px;">📋 应收款明细（谁付给我）</div>
+                <div id="receivableDetailList" style="border-top:1px dashed var(--line);padding-top:8px;margin-top:6px;">
+                    <div class="mini-section-label recv">📥 应收款明细（谁付给我）</div>
                     <div id="receivableDetailItems" style="font-size:13px;color:var(--ink-soft);"></div>
                 </div>
 
                 <!-- 仪表盘内嵌账单列表 -->
-                <div id="dashBillsSection" style="border-top:1px solid var(--line);padding-top:10px;margin-top:8px;">
+                <div id="dashBillsSection" style="border-top:1px dashed var(--line);padding-top:8px;margin-top:6px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                         <span style="font-size:13px;font-weight:600;color:var(--ink);">📄 账单记录</span>
                         <span style="font-size:11px;color:var(--ink-faint);">最近10条</span>
@@ -1158,72 +1826,77 @@
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- 页面2：账单 -->
-        <!-- ============================================================ -->
-        <div class="page" id="page-bills">
-            <h2 class="page-title">📋 账单管理</h2>
-            <p class="page-subtitle">创建新账单，查看所有历史账单及收付款人</p>
-
-            <div class="card" style="border:2px dashed var(--line-strong);">
-                <div class="card-header">
-                    <span class="card-title">➕ 创建新账单</span>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>账单名称</label>
-                        <input type="text" id="billTitle" placeholder="如：超市采购、水电费..." />
+                    <!-- ============================================ -->
+                    <!-- 页面2：账单 -->
+                    <!-- ============================================ -->
+                    <div class="page" id="page-bills">
+                        <div class="bills-layout">
+                            <div class="bills-create">
+                                <div class="card" style="border:2px dashed var(--line-strong);">
+                                    <div class="card-header">
+                                        <span class="card-title">➕ 创建新账单</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>账单名称</label>
+                                        <input type="text" id="billTitle" placeholder="如：超市采购、水电费..." />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>总金额（元）</label>
+                                        <input type="number" id="billAmount" placeholder="0.00" step="0.01" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>购买人</label>
+                                        <select id="billPurchaser"></select>
+                                    </div>
+                                    <button class="btn btn-primary btn-block" onclick="createBill()">📤 提交账单</button>
+                                    <div style="margin-top:10px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;">
+                                        💡 提交后账单进入「待认领」状态，家庭成员可认领报销。
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="section-title">📄 全部账单记录</h3>
+                                <div class="filter-tabs" id="billFilterBar">
+                                    <button class="filter-tab active" data-filter="all" onclick="filterBills('all')">📋 全部</button>
+                                    <button class="filter-tab" data-filter="pending" onclick="filterBills('pending')">⏳ 待认领</button>
+                                    <button class="filter-tab" data-filter="claiming" onclick="filterBills('claiming')">✋ 认领中</button>
+                                    <button class="filter-tab" data-filter="transferring" onclick="filterBills('transferring')">💸 待转账</button>
+                                    <button class="filter-tab" data-filter="settled" onclick="filterBills('settled')">✅ 已结清</button>
+                                </div>
+                                <div id="billList"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>总金额（元）</label>
-                        <input type="number" id="billAmount" placeholder="0.00" step="0.01" />
+
+                    <!-- ============================================ -->
+                    <!-- 页面3：查账 -->
+                    <!-- ============================================ -->
+                    <div class="page" id="page-settlement">
+                        <div id="settlementContent"></div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>购买人</label>
-                    <select id="billPurchaser"></select>
-                </div>
-                <button class="btn btn-primary" onclick="createBill()">📤 提交账单</button>
-            </div>
 
-            <h3 style="margin:20px 0 8px;font-size:15px;">📄 全部账单记录</h3>
-            <div class="filter-tabs" id="billFilterBar">
-                <button class="filter-tab active" data-filter="all" onclick="filterBills('all')">📋 全部</button>
-                <button class="filter-tab" data-filter="pending" onclick="filterBills('pending')">⏳ 待认领</button>
-                <button class="filter-tab" data-filter="claiming" onclick="filterBills('claiming')">✋ 认领中</button>
-                <button class="filter-tab" data-filter="transferring" onclick="filterBills('transferring')">💸 待转账</button>
-                <button class="filter-tab" data-filter="settled" onclick="filterBills('settled')">✅ 已结清</button>
+                    <!-- ============================================ -->
+                    <!-- 页面4：激励榜 -->
+                    <!-- ============================================ -->
+                    <div class="page" id="page-ranking">
+                        <div class="rank-cols">
+                            <div>
+                                <h3 class="section-title">⚡ 闪电勋章</h3>
+                                <div class="rank-list" id="medalRank"></div>
+                            </div>
+                            <div>
+                                <h3 class="section-title">🛒 本周采购达人</h3>
+                                <div class="rank-list" id="shopperRank"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </main>
             </div>
-            <div id="billList"></div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- 页面3：查账 -->
-        <!-- ============================================================ -->
-        <div class="page" id="page-settlement">
-            <h2 class="page-title">💰 我的查账与结算</h2>
-            <p class="page-subtitle">查看需要转账和应收的明细，确认支付后点击「我已转账」</p>
-            <div id="settlementContent"></div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 页面4：激励榜 -->
-        <!-- ============================================================ -->
-        <div class="page" id="page-ranking">
-            <h2 class="page-title">🏆 激励榜</h2>
-            <p class="page-subtitle">温和正向激励，鼓励为家庭付出</p>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-                <div>
-                    <h3 style="font-size:15px;margin-bottom:10px;">⚡ 闪电勋章</h3>
-                    <div class="rank-list" id="medalRank"></div>
-                </div>
-                <div>
-                    <h3 style="font-size:15px;margin-bottom:10px;">🛒 本周采购达人</h3>
-                    <div class="rank-list" id="shopperRank"></div>
-                </div>
-            </div>
-            </div>
-        </div>
+        <!-- 浮动快速记账按钮（新增交互） -->
+        <button class="fab" id="fabAddBill" onclick="fabCreateBill()" title="记一笔账单">＋</button>
 
     </div>
 
@@ -2007,6 +2680,7 @@
                     `👤 ${name} <span class="role-badge">${getRoleDisplay(role)}</span>`;
 
                 showToast(`🎉 欢迎回来，${name}！`, 'success');
+                updateGreeting();
 
                 // 加载数据
                 renderAll();
@@ -2023,6 +2697,15 @@
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('loginPassword').value = '';
+            // 清理新增交互状态
+            const todoBar = document.getElementById('todoHintBar');
+            if (todoBar) { todoBar.classList.remove('show'); todoBar.innerHTML = ''; }
+            const greetEl = document.getElementById('topGreeting');
+            if (greetEl) greetEl.textContent = '';
+            const searchInput = document.getElementById('globalSearch');
+            if (searchInput) searchInput.value = '';
+            const searchDd = document.getElementById('searchDropdown');
+            if (searchDd) searchDd.style.display = 'none';
             // 退出时取消自动登录勾选（保留记住的密码以便下次手动登录）
             document.getElementById('autoLogin').checked = false;
             localStorage.setItem('family_auto_login', '0');
@@ -2050,6 +2733,7 @@
                 document.getElementById('appContainer').style.display = 'block';
                 document.getElementById('navbarUser').innerHTML =
                     `👤 ${user.name} <span class="role-badge">${getRoleDisplay(user.role)}</span>`;
+                updateGreeting();
                 renderAll();
                 return true;
             }
@@ -2066,10 +2750,10 @@
                 const resp = await callAPI('/dashboard?user_id=' + currentUser.id);
                 const data = resp.data;
 
-                document.getElementById('statTotalCommitment').textContent = data.totalCommitment.toFixed(0);
-                document.getElementById('statTotalPending').textContent = data.totalPending.toFixed(0);
-                document.getElementById('statTotalAvailable').textContent = data.totalAvailable.toFixed(0);
-                document.getElementById('statTotalSettled').textContent = data.totalSettled;
+                animateNumber(document.getElementById('statTotalCommitment'), data.totalCommitment);
+                animateNumber(document.getElementById('statTotalPending'), data.totalPending);
+                animateNumber(document.getElementById('statTotalAvailable'), data.totalAvailable);
+                animateNumber(document.getElementById('statTotalSettled'), data.totalSettled);
 
                 const grid = document.getElementById('memberPoolGrid');
                 grid.innerHTML = data.members.map(m => {
@@ -2143,6 +2827,11 @@
 
                 // 渲染仪表盘内置账单列表
                 renderDashBills();
+
+                // 待办提醒条（新增交互）
+                const payPending = (me.payable_detail || []).filter(i => !i.payer_confirmed).length;
+                const recvPending = (me.receivable_detail || []).filter(i => !i.receiver_confirmed).length;
+                updateTodoHint(payPending, recvPending);
 
             } catch (e) {
                 console.error(`❌ [仪表盘渲染] 加载仪表盘数据失败:`, e);
@@ -2642,6 +3331,12 @@
 
                 container.innerHTML = html;
 
+                // 待办提醒条（新增交互）
+                updateTodoHint(
+                    data.payable.filter(i => !i.payer_confirmed).length,
+                    data.receivable.filter(i => !i.receiver_confirmed).length
+                );
+
             } catch (e) {
                 console.error(`❌ [结算渲染] 加载结算数据失败:`, e);
                 container.innerHTML = `<div class="empty-state"><span class="emoji">😵</span>结算数据加载失败</div>`;
@@ -2776,6 +3471,7 @@
                 const pageName = this.dataset.page;
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById(`page-${pageName}`).classList.add('active');
+                updateTopbarTitle(pageName);
                 switch (pageName) {
                     case 'dashboard':
                         renderDashboard();
@@ -2796,6 +3492,7 @@
         async function renderAll() {
             const activeTab = document.querySelector('.nav-tab.active');
             const pageName = activeTab ? activeTab.dataset.page : 'dashboard';
+            updateTopbarTitle(pageName);
             switch (pageName) {
                 case 'dashboard':
                     await renderDashboard();
@@ -2810,6 +3507,210 @@
                     await renderRanking();
                     break;
             }
+        }
+
+
+        // ================================================================
+        // 9.5 新增交互功能（布局增强，不影响既有业务逻辑）
+        // ================================================================
+
+        const PAGE_TITLES = {
+            dashboard: '📊 家庭财务仪表盘',
+            bills: '📋 账单管理',
+            settlement: '💰 我的查账与结算',
+            ranking: '🏆 激励榜'
+        };
+
+        /** 更新顶栏标题 */
+        function updateTopbarTitle(pageName) {
+            const el = document.getElementById('topbarTitle');
+            if (el && PAGE_TITLES[pageName]) el.textContent = PAGE_TITLES[pageName];
+        }
+
+        /** 折叠 / 展开侧边栏 */
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            const btn = document.getElementById('sidebarToggle');
+            if (btn) btn.textContent = document.body.classList.contains('sidebar-collapsed') ? '☰' : '☰';
+        }
+
+        /** 数字滚动动画 */
+        function animateNumber(el, target, duration = 650) {
+            if (!el) return;
+            const start = parseFloat(el.textContent) || 0;
+            const startTime = performance.now();
+            function step(now) {
+                const p = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(start + (target - start) * eased);
+                if (p < 1) requestAnimationFrame(step);
+                else el.textContent = Math.round(target);
+            }
+            requestAnimationFrame(step);
+        }
+
+        /** 实时时钟 + 时段问候 */
+        function updateClock() {
+            const el = document.getElementById('topClock');
+            if (el) {
+                const now = new Date();
+                el.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            }
+        }
+        function updateGreeting() {
+            const el = document.getElementById('topGreeting');
+            if (!el) return;
+            const h = new Date().getHours();
+            let g = '晚上好';
+            if (h < 6) g = '夜深了';
+            else if (h < 9) g = '早上好';
+            else if (h < 12) g = '上午好';
+            else if (h < 14) g = '中午好';
+            else if (h < 18) g = '下午好';
+            el.textContent = `${g}${currentUser ? '，' + currentUser.name : ''} 👋`;
+        }
+        setInterval(updateClock, 1000);
+
+        /** 一键刷新全部数据 */
+        async function refreshAll() {
+            showToast('🔄 正在刷新数据…', 'info');
+            await renderAll();
+            showToast('✅ 数据已刷新', 'success');
+        }
+
+        /** 浮动按钮：快速记账 */
+        function fabCreateBill() {
+            const tab = document.querySelector('.nav-tab[data-page="bills"]');
+            if (tab) tab.click();
+            setTimeout(() => {
+                const input = document.getElementById('billTitle');
+                if (input) input.focus();
+            }, 350);
+        }
+
+        /** 快捷登录（演示账号一键登录） */
+        function quickLogin(username, password) {
+            document.getElementById('loginUsername').value = username;
+            document.getElementById('loginPassword').value = password;
+            handleLogin();
+        }
+
+        /** 待办提醒条（应付款 / 应收款） */
+        function updateTodoHint(payableCount = 0, receivableCount = 0) {
+            const bar = document.getElementById('todoHintBar');
+            if (!bar) return;
+            const total = (payableCount || 0) + (receivableCount || 0);
+            if (total <= 0) {
+                bar.classList.remove('show');
+                bar.innerHTML = '';
+                return;
+            }
+            const parts = [];
+            if (payableCount > 0) parts.push(`您有 <strong>${payableCount}</strong> 笔应付款待转账`);
+            if (receivableCount > 0) parts.push(`<strong>${receivableCount}</strong> 笔应收款待确认`);
+            bar.innerHTML = `⏰ 待办提醒：${parts.join('，')}　<a href="javascript:void(0)" onclick="goSettlement()">去处理 →</a>`;
+            bar.classList.add('show');
+        }
+        function goSettlement() {
+            const tab = document.querySelector('.nav-tab[data-page="settlement"]');
+            if (tab) tab.click();
+        }
+
+        // ===== 全局搜索（顶栏） =====
+        let _billSearchCache = null;
+        async function ensureBillCache() {
+            if (_billSearchCache) return _billSearchCache;
+            try {
+                const resp = await callAPI('/bills?status=all');
+                _billSearchCache = resp.data || [];
+            } catch (e) {
+                _billSearchCache = [];
+            }
+            return _billSearchCache;
+        }
+
+        async function jumpToSearchResult(billId) {
+            const dd = document.getElementById('searchDropdown');
+            const input = document.getElementById('globalSearch');
+            if (dd) dd.style.display = 'none';
+            if (input) input.value = '';
+            await viewBillDetail(billId);
+        }
+
+        function initGlobalSearch() {
+            const input = document.getElementById('globalSearch');
+            const dd = document.getElementById('searchDropdown');
+            if (!input || !dd) return;
+            let debounceTimer = null;
+
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const kw = input.value.trim();
+                if (!kw) { dd.style.display = 'none'; dd.innerHTML = ''; return; }
+                debounceTimer = setTimeout(async () => {
+                    const bills = await ensureBillCache();
+                    const kwLower = kw.toLowerCase();
+                    const matches = bills.filter(b =>
+                        (b.title || '').toLowerCase().includes(kwLower) ||
+                        (b.purchaser_name || '').toLowerCase().includes(kwLower)
+                    ).slice(0, 8);
+                    if (matches.length === 0) {
+                        dd.innerHTML = '<div class="search-empty">🔍 未找到匹配账单</div>';
+                    } else {
+                        dd.innerHTML = matches.map(b => `
+                            <div class="search-item" onclick="jumpToSearchResult(${b.id})">
+                                <div class="search-item-title">${b.title}</div>
+                                <div class="search-item-meta">${b.purchaser_name || '未知'} · ${Number(b.total_amount || 0).toFixed(0)} 元 · ${getBillStatusText(b.status)}</div>
+                            </div>
+                        `).join('');
+                    }
+                    dd.style.display = 'block';
+                }, 250);
+            });
+
+            input.addEventListener('focus', function() {
+                if (input.value.trim()) input.dispatchEvent(new Event('input'));
+            });
+
+            // 点击搜索框外部关闭下拉
+            document.addEventListener('click', function(e) {
+                const box = document.getElementById('searchBox');
+                if (box && !box.contains(e.target)) {
+                    dd.style.display = 'none';
+                }
+            });
+        }
+
+        /** 全局键盘快捷键：Ctrl/Cmd+K 聚焦搜索、Esc 关闭、数字键 1-4 快速切页 */
+        function initGlobalKeys() {
+            document.addEventListener('keydown', function(e) {
+                // Ctrl/Cmd + K → 聚焦搜索
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    const s = document.getElementById('globalSearch');
+                    if (s) { s.focus(); s.select(); }
+                    return;
+                }
+                // Esc → 关闭搜索下拉
+                if (e.key === 'Escape') {
+                    const dd = document.getElementById('searchDropdown');
+                    if (dd && dd.style.display === 'block') {
+                        dd.style.display = 'none';
+                        document.getElementById('globalSearch').blur();
+                    }
+                    return;
+                }
+                // 数字键 1-4 快速切页（不在输入框中时）
+                if (e.key >= '1' && e.key <= '4') {
+                    const active = document.activeElement;
+                    if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+                    const app = document.getElementById('appContainer');
+                    if (!app || app.style.display === 'none') return;
+                    const pages = ['dashboard', 'bills', 'settlement', 'ranking'];
+                    const tab = document.querySelector(`.nav-tab[data-page="${pages[parseInt(e.key) - 1]}"]`);
+                    if (tab) tab.click();
+                }
+            });
         }
 
 
@@ -2865,6 +3766,12 @@
             })();
         }
 
+        // 初始化新增交互
+        initGlobalSearch();
+        initGlobalKeys();
+        updateClock();
+        updateGreeting();
+
         // 暴露全局函数
         window.handleLogin = handleLogin;
         window.handleLogout = handleLogout;
@@ -2880,6 +3787,13 @@
         window.closeModal = closeModal;
         window.modalConfirm = modalConfirm;
         window.renderAll = renderAll;
+        // 新增交互导出
+        window.toggleSidebar = toggleSidebar;
+        window.refreshAll = refreshAll;
+        window.fabCreateBill = fabCreateBill;
+        window.quickLogin = quickLogin;
+        window.jumpToSearchResult = jumpToSearchResult;
+        window.goSettlement = goSettlement;
     </script>
 
 </body>
